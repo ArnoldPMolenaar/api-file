@@ -18,7 +18,14 @@ func Migrate(db *gorm.DB) error {
 		return tx.Error
 	}
 
-	err := db.AutoMigrate(&models.App{}, &models.AppStoragePath{}, &models.Document{}, &models.Image{}, &models.ImageSize{})
+	err := db.AutoMigrate(
+		&models.App{},
+		&models.AppStoragePath{},
+		&models.Folder{},
+		&models.FolderFolder{},
+		&models.Document{},
+		&models.Image{},
+		&models.ImageSize{})
 	if err != nil {
 		return err
 	}

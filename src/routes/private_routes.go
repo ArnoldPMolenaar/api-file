@@ -17,4 +17,13 @@ func PrivateRoutes(a *fiber.App) {
 	storagePaths.Post("/", controllers.CreateStoragePath)
 	storagePaths.Get("/:id", controllers.GetStoragePath)
 	storagePaths.Put("/:id", controllers.UpdateStoragePath)
+
+	// Register CRUD routes for /v1/folders.
+	folders := route.Group("/folders", middleware.MachineProtected())
+	// TODO: Implement paginate for folders?
+	folders.Post("/", controllers.CreateFolder)
+	folders.Get("/:id", controllers.GetFolder)
+	folders.Put("/:id", controllers.UpdateFolder)
+	folders.Delete("/:id", controllers.DeleteFolder)
+	folders.Put("/:id/restore", controllers.RestoreFolder)
 }

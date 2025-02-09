@@ -11,4 +11,6 @@ type Folder struct {
 	// Relationships.
 	AppStoragePath AppStoragePath `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:AppStoragePathID;references:ID"`
 	Folders        []FolderFolder `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:ParentFolderID"`
+	Images         []Image        `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:FolderID"`
+	Documents      []Document     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:FolderID"`
 }

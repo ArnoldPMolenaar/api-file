@@ -1,11 +1,20 @@
 package routes
 
 import (
+	"api-file/main/src/controllers"
+	"github.com/ArnoldPMolenaar/api-utils/middleware"
 	"github.com/gofiber/fiber/v2"
 )
 
 // PrivateRoutes func for describe group of private routes.
 func PrivateRoutes(a *fiber.App) {
 	// Create private routes group.
-	//route := a.Group("/v1")
+	route := a.Group("/v1")
+
+	// Register CRU routes for /v1/storage-paths.
+	storagePaths := route.Group("/storage-paths", middleware.MachineProtected())
+	storagePaths.Get("/", controllers.GetStoragePaths)
+	storagePaths.Post("/", controllers.CreateStoragePath)
+	storagePaths.Get("/:id", controllers.GetStoragePath)
+	storagePaths.Put("/:id", controllers.UpdateStoragePath)
 }

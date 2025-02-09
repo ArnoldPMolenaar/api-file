@@ -1,6 +1,9 @@
 package errors
 
 // Define error codes as constants.
-//const (
-// Add more error codes as needed.
-//)
+const (
+	AppExists            = "appExists"
+	StoragePathExists    = "storagePathExists"
+	StoragePathAvailable = "storagePathAvailable"
+	// Add more error codes as needed.
+)

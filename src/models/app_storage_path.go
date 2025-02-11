@@ -6,5 +6,6 @@ type AppStoragePath struct {
 	Path    string `gorm:"not null;index:idx_app_storage_path,unique,priority:2"`
 
 	// Relationships.
-	App App `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:AppName;references:Name"`
+	App     App      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:AppName;references:Name"`
+	Folders []Folder `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:AppStoragePathID;references:ID"`
 }

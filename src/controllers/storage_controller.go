@@ -174,12 +174,12 @@ func UpdateStoragePath(c *fiber.Ctx) error {
 }
 
 // toStoragePathPagination func to convert the storage paths to a response struct.
-func toStoragePathPagination(storagePaths []models.AppStoragePath) []responses.AppStoragePath {
-	result := make([]responses.AppStoragePath, len(storagePaths))
+func toStoragePathPagination(storagePaths []models.AppStoragePath) []responses.AppStoragePathPaginate {
+	result := make([]responses.AppStoragePathPaginate, len(storagePaths))
 
 	for i := range storagePaths {
-		response := responses.AppStoragePath{}
-		response.SetAppStoragePath(&storagePaths[i])
+		response := responses.AppStoragePathPaginate{}
+		response.SetAppStoragePathPaginate(&storagePaths[i])
 		result[i] = response
 	}
 

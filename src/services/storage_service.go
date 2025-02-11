@@ -17,10 +17,18 @@ func IsStorageAvailable(app, path string) (bool, error) {
 // GetStoragePath method to get a storage path for the app.
 func GetStoragePath(id uint) (*models.AppStoragePath, error) {
 	storagePath := &models.AppStoragePath{}
+	folders := make([]models.Folder, 0)
+
+	if result := database.Pg.Joins("LEFT JOIN folder_folders ON folder_folders.folder_id = folders.id").
+		Find(&folders, "folder_folders.folder_id IS NULL AND folders.app_storage_path_id = ?", id); result.Error != nil {
+		return nil, result.Error
+	}
 
 	if result := database.Pg.Find(storagePath, "id = ?", id); result.Error != nil {
 		return nil, result.Error
 	}
+
+	storagePath.Folders = folders
 
 	return storagePath, nil
 }

@@ -17,6 +17,8 @@ func WebSocketProgress(c *websocket.Conn) {
 	for {
 		// Keep the connection open
 		if _, _, err := c.ReadMessage(); err != nil {
+			// When the ReadMessage method returns an error (e.g., when the client closes their browser),
+			// the loop breaks, and the function returns.
 			break
 		}
 	}

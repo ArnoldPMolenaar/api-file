@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -32,4 +33,14 @@ func FiberMiddleware(a *fiber.App) {
 		// Catch a panic and return a 500 response.
 		recover.New(),
 	)
+	a.Use("/ws", webSocketMiddleware)
+}
+
+// WebSocketMiddleware checks if the request is a WebSocket upgrade.
+func webSocketMiddleware(c *fiber.Ctx) error {
+	if websocket.IsWebSocketUpgrade(c) {
+		c.Locals("allowed", true)
+		return c.Next()
+	}
+	return fiber.ErrUpgradeRequired
 }

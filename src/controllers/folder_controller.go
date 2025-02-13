@@ -11,9 +11,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// TODO: Implement paginate for folders?
-// Instead add a endpoint to get a list of root folders in the storage path.
-
 // GetFolder func to get a folder.
 func GetFolder(c *fiber.Ctx) error {
 	// Get the ID from the URL.

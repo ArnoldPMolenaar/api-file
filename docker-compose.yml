@@ -9,6 +9,9 @@ services:
       - ./.env
     volumes:
       - .:/app
+      - type: bind
+        source: "${PATH_ROOT}"
+        target: /app/files
     depends_on:
       - valkey
     extra_hosts:
@@ -25,6 +28,9 @@ services:
       - ./.env
     volumes:
       - .:/build
+      - type: bind
+        source: "${PATH_ROOT}"
+        target: /build/files
     extra_hosts:
       - "host.docker.internal:host-gateway"
     network_mode: "host"

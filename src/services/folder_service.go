@@ -50,6 +50,37 @@ func IsFolderDeleted(id uint) (bool, error) {
 	return count == 1, nil
 }
 
+// GetFolderPath method to get the path of a folder.
+// It returns the path of the folder like:
+//
+//	folder1/folder2/folder3
+func GetFolderPath(appStoragePathID, folderID uint) (string, error) {
+	var folders []*models.FolderFolder
+	parentFolderID := folderID
+	var path string
+
+	if result := database.Pg.Preload("Folder").
+		Preload("ParentFolder").
+		Find(&folders, "app_storage_path_id = ?", appStoragePathID); result.Error != nil {
+		return "", result.Error
+	}
+
+	folder := searchFolderByID(folders, folderID)
+	for folder != nil {
+		path = folder.Folder.Name + "/" + path
+		parentFolderID = folder.ParentFolderID
+		folder = searchFolderByID(folders, folder.ParentFolderID)
+	}
+
+	if mainFolder, _, err := GetFolder(parentFolderID); err != nil {
+		return "", err
+	} else {
+		path = mainFolder.Name + "/" + path
+	}
+
+	return path, nil
+}
+
 // GetFolder method to get a folder.
 func GetFolder(id uint, preload ...bool) (*models.Folder, []*models.Folder, error) {
 	var folders []*models.Folder
@@ -125,5 +156,15 @@ func RestoreFolder(id uint) error {
 		return result.Error
 	}
 
+	return nil
+}
+
+// searchInFoldersByID searches for a folder in the array by FolderID.
+func searchFolderByID(folders []*models.FolderFolder, id uint) *models.FolderFolder {
+	for _, folder := range folders {
+		if folder.FolderID == id {
+			return folder
+		}
+	}
 	return nil
 }

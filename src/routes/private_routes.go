@@ -25,4 +25,8 @@ func PrivateRoutes(a *fiber.App) {
 	folders.Put("/:id", controllers.UpdateFolder)
 	folders.Delete("/:id", controllers.DeleteFolder)
 	folders.Put("/:id/restore", controllers.RestoreFolder)
+
+	// Register CRUD routes for /v1/images.
+	images := route.Group("/images", middleware.MachineProtected())
+	images.Post("/", controllers.CreateImage)
 }

@@ -6,5 +6,10 @@ const (
 	StoragePathExists    = "storagePathExists"
 	StoragePathAvailable = "storagePathAvailable"
 	FolderExists         = "folderExists"
+	ImageExists          = "imageExists"
+	ImageTypeInvalid     = "imageTypeInvalid"
+	ParseBase64          = "parseBase64"
+	ParseFilename        = "parseFilename"
+	UploadImage          = "uploadImage"
 	// Add more error codes as needed.
 )

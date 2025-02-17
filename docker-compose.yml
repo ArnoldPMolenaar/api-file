@@ -11,7 +11,7 @@ services:
       - .:/app
       - type: bind
         source: "${PATH_ROOT}"
-        target: /app/files
+        target: "${PATH_FILES}"
     depends_on:
       - valkey
     extra_hosts:
@@ -30,7 +30,7 @@ services:
       - .:/build
       - type: bind
         source: "${PATH_ROOT}"
-        target: /build/files
+        target: "${PATH_FILES}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     network_mode: "host"

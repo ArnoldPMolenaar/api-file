@@ -43,10 +43,10 @@ func CreateImage(c *fiber.Ctx) error {
 	}
 
 	// Check if the image is available.
-	if available, err := services.IsImageAvailable(request.AppStoragePathID, filename, extension); err != nil {
+	if available, err := services.IsImageAvailable(request.FolderID, filename, extension); err != nil {
 		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err)
 	} else if available {
-		return errorutil.Response(c, fiber.StatusConflict, errors.ImageExists, "Image already")
+		return errorutil.Response(c, fiber.StatusConflict, errors.ImageExists, "Image already exists.")
 	}
 
 	// Convert data to bytes.
@@ -81,7 +81,7 @@ func CreateImage(c *fiber.Ctx) error {
 }
 
 func uploadImage(appStoragePath *models.AppStoragePath, folderID uint, filename string, data []byte) (int, int, error) {
-	path := appStoragePath.Path
+	path := os.Getenv("PATH_FILES") + appStoragePath.Path
 	if folderPath, err := services.GetFolderPath(appStoragePath.ID, folderID); err != nil {
 		return 0, 0, err
 	} else {
@@ -117,7 +117,7 @@ func uploadImage(appStoragePath *models.AppStoragePath, folderID uint, filename 
 		}
 		seeker += int64(len(chunk))
 		// TODO: Write process to websocket connection.
-		log.Debug("Processed: %d", (i*100)/len(chunks))
+		log.Debugf("Processed: %d", (i*100)/len(chunks))
 	}
 
 	return width, height, err

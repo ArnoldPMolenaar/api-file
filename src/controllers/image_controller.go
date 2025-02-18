@@ -7,6 +7,7 @@ import (
 	"api-file/main/src/models"
 	"api-file/main/src/services"
 	upload "api-file/main/src/utils"
+	"fmt"
 	errorutil "github.com/ArnoldPMolenaar/api-utils/errors"
 	"github.com/ArnoldPMolenaar/api-utils/utils"
 	"github.com/gofiber/fiber/v2"
@@ -58,11 +59,11 @@ func CreateImage(c *fiber.Ctx) error {
 	}
 	data, err := upload.Base64ToBytes(base64Data)
 	if err != nil {
-		return errorutil.Response(c, fiber.StatusBadRequest, errors.ParseBase64, err)
+		return errorutil.Response(c, fiber.StatusBadRequest, errors.ParseBase64, fmt.Sprintf("Error while decoding bytes. Amount of correct parsed bytes: %d", err))
 	}
 
 	// Upload the image.
-	width, height, err := uploadImage(storagePath, request.FolderID, filename, data)
+	width, height, err := uploadImage(storagePath, request.FolderID, request.Name, data)
 	if err != nil {
 		return errorutil.Response(c, fiber.StatusInternalServerError, errors.UploadImage, err)
 	}
@@ -80,6 +81,7 @@ func CreateImage(c *fiber.Ctx) error {
 	return c.JSON(response)
 }
 
+// Upload the image to the storage path.
 func uploadImage(appStoragePath *models.AppStoragePath, folderID uint, filename string, data []byte) (int, int, error) {
 	path := os.Getenv("PATH_FILES") + appStoragePath.Path
 	if folderPath, err := services.GetFolderPath(appStoragePath.ID, folderID); err != nil {

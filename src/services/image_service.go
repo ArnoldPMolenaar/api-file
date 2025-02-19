@@ -18,7 +18,7 @@ func IsImageAvailable(folderId uint, name, extension string) (bool, error) {
 }
 
 // CreateImage method to create the image that is uploaded.
-func CreateImage(folderID uint, name, extension, mimeType string, size, with, height int, description *string) (models.Image, error) {
+func CreateImage(folderID uint, name, extension, mimeType string, size, with, height int, description *string, sizes []models.ImageSize) (models.Image, error) {
 	image := models.Image{
 		FolderID:    folderID,
 		Name:        name,
@@ -28,6 +28,7 @@ func CreateImage(folderID uint, name, extension, mimeType string, size, with, he
 		Width:       with,
 		Height:      height,
 		Description: sql.NullString{Valid: false, String: ""},
+		ImageSizes:  sizes,
 	}
 
 	if description != nil {

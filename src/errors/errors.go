@@ -11,5 +11,6 @@ const (
 	ParseBase64          = "parseBase64"
 	ParseFilename        = "parseFilename"
 	UploadImage          = "uploadImage"
+	ConvertImage         = "convertImage"
 	// Add more error codes as needed.
 )

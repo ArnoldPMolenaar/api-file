@@ -3,6 +3,7 @@ package controllers
 import (
 	"api-file/main/src/dto/requests"
 	"api-file/main/src/dto/responses"
+	"api-file/main/src/enums"
 	"api-file/main/src/errors"
 	"api-file/main/src/models"
 	"api-file/main/src/services"
@@ -63,13 +64,26 @@ func CreateImage(c *fiber.Ctx) error {
 	}
 
 	// Upload the image.
-	width, height, err := uploadImage(storagePath, request.FolderID, request.Name, data)
+	progress := 100.0
+	if !request.IsNotResizable {
+		progress = 100.0 / 7
+	}
+
+	width, height, err := uploadImage(storagePath, request.FolderID, request.Name, data, progress)
 	if err != nil {
 		return errorutil.Response(c, fiber.StatusInternalServerError, errors.UploadImage, err)
 	}
 
+	// Create web size images.
+	var imageSizes []models.ImageSize
+	if !request.IsNotResizable {
+		if imageSizes, err = convertAndUploadImages(storagePath, request.FolderID, filename, data, request.Quality, progress); err != nil {
+			return errorutil.Response(c, fiber.StatusInternalServerError, errors.ConvertImage, err)
+		}
+	}
+
 	// Create the image.
-	image, err := services.CreateImage(request.FolderID, filename, extension, mimeType, len(data), width, height, request.Description)
+	image, err := services.CreateImage(request.FolderID, filename, extension, mimeType, len(data), width, height, request.Description, imageSizes)
 	if err != nil {
 		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err)
 	}
@@ -82,15 +96,13 @@ func CreateImage(c *fiber.Ctx) error {
 }
 
 // Upload the image to the storage path.
-func uploadImage(appStoragePath *models.AppStoragePath, folderID uint, filename string, data []byte) (int, int, error) {
-	path := os.Getenv("PATH_FILES") + appStoragePath.Path
-	if folderPath, err := services.GetFolderPath(appStoragePath.ID, folderID); err != nil {
+func uploadImage(appStoragePath *models.AppStoragePath, folderID uint, filename string, data []byte, progress float64) (int, int, error) {
+	path, err := services.GetPath(appStoragePath, folderID)
+	if err != nil {
 		return 0, 0, err
-	} else {
-		path += folderPath
 	}
 
-	err := os.MkdirAll(path, os.ModePerm)
+	err = os.MkdirAll(path, os.ModePerm)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -119,8 +131,91 @@ func uploadImage(appStoragePath *models.AppStoragePath, folderID uint, filename 
 		}
 		seeker += int64(len(chunk))
 		// TODO: Write process to websocket connection.
-		log.Debugf("Processed: %d", (i*100)/len(chunks))
+		percentage := float64(i) * 100.0 / float64(len(chunks))
+		if progress == 100.0 {
+			log.Debugf("Processed: %.2f", percentage)
+		} else {
+			log.Debugf("Processed: %.2f", progress*percentage/100.0)
+		}
 	}
 
+	// TODO: Make here one last process message with 100% or `progress` value.
+	log.Debugf("Processed: %.2f", progress)
+
 	return width, height, err
+}
+
+func convertAndUploadImages(appStoragePath *models.AppStoragePath, folderID uint, filename string, data []byte, quality int, progress float64) ([]models.ImageSize, error) {
+	var imageSizes []models.ImageSize
+	sizes := map[enums.Size]int{
+		enums.XS:  600,
+		enums.SM:  960,
+		enums.MD:  1280,
+		enums.LG:  1920,
+		enums.XL:  2560,
+		enums.XXL: 3840,
+	}
+	path, err := services.GetPath(appStoragePath, folderID)
+	if err != nil {
+		return imageSizes, err
+	}
+	originalSize, err := bimg.NewImage(data).Size()
+	if err != nil {
+		return imageSizes, err
+	}
+
+	var amountOfImagesToCreate int8
+	for _, width := range sizes {
+		if originalSize.Width > width {
+			amountOfImagesToCreate++
+		}
+	}
+
+	calculatedProgress := (100.0 - progress) / float64(amountOfImagesToCreate)
+	var currentImage int8
+	for size, width := range sizes {
+		currentImage++
+		filenameSize := fmt.Sprintf("%s-%s.webp", filename, size)
+
+		if originalSize.Width <= width {
+			continue
+		}
+
+		newHeight := originalSize.Height * width / originalSize.Width
+		resized, err := bimg.NewImage(data).Resize(width, newHeight)
+		if err != nil {
+			return imageSizes, err
+		}
+
+		s, err := bimg.NewImage(resized).Size()
+		if err != nil {
+			return imageSizes, err
+		}
+
+		converted, err := bimg.NewImage(resized).Convert(bimg.WEBP)
+		if err != nil {
+			return imageSizes, err
+		}
+
+		processed, err := bimg.NewImage(converted).Process(bimg.Options{Quality: quality})
+		if err != nil {
+			return imageSizes, err
+		}
+
+		err = bimg.Write(path+filenameSize, processed)
+		if err != nil {
+			return imageSizes, err
+		}
+
+		imageSizes = append(imageSizes, models.ImageSize{
+			Size:   size,
+			Width:  s.Width,
+			Height: s.Height,
+		})
+
+		// TODO: Write process to websocket connection.
+		log.Debugf("Processed: %.2f", progress+calculatedProgress*float64(currentImage))
+	}
+
+	return imageSizes, nil
 }

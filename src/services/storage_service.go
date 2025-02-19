@@ -3,6 +3,7 @@ package services
 import (
 	"api-file/main/src/database"
 	"api-file/main/src/models"
+	"os"
 )
 
 // IsStorageAvailable method to check if a storage path is available within the app.
@@ -12,6 +13,18 @@ func IsStorageAvailable(app, path string) (bool, error) {
 	} else {
 		return result.RowsAffected == 1, nil
 	}
+}
+
+// GetPath method to get the full path.
+func GetPath(appStoragePath *models.AppStoragePath, folderID uint) (string, error) {
+	path := os.Getenv("PATH_FILES") + appStoragePath.Path
+	folderPath, err := GetFolderPath(appStoragePath.ID, folderID)
+
+	if err != nil {
+		return "", err
+	}
+
+	return path + folderPath, nil
 }
 
 // GetStoragePath method to get a storage path for the app.

@@ -21,3 +21,7 @@ func (s *Size) Scan(value interface{}) error {
 func (s Size) Value() (driver.Value, error) {
 	return string(s), nil
 }
+
+func (s Size) String() string {
+	return string(s)
+}

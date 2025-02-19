@@ -7,5 +7,6 @@ type CreateImage struct {
 	Name             string  `json:"name" validate:"required"`
 	Data             string  `json:"data" validate:"required"`
 	Description      *string `json:"description"`
+	Quality          int     `json:"quality"`
 	IsNotResizable   bool    `json:"isNotResizable"`
 }

@@ -6,16 +6,17 @@ import (
 )
 
 type Image struct {
-	ID          uint      `json:"id"`
-	FolderID    uint      `json:"folderId"`
-	Name        string    `json:"name"`
-	Extension   string    `json:"extension"`
-	Size        int       `json:"size"`
-	Width       int       `json:"width"`
-	Height      int       `json:"height"`
-	Description *string   `json:"description"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	ID          uint        `json:"id"`
+	FolderID    uint        `json:"folderId"`
+	Name        string      `json:"name"`
+	Extension   string      `json:"extension"`
+	Size        int         `json:"size"`
+	Width       int         `json:"width"`
+	Height      int         `json:"height"`
+	Description *string     `json:"description"`
+	CreatedAt   time.Time   `json:"createdAt"`
+	UpdatedAt   time.Time   `json:"updatedAt"`
+	ImageSizes  []ImageSize `json:"sizes"`
 }
 
 // SetImage method to set an image.
@@ -29,8 +30,15 @@ func (i *Image) SetImage(image *models.Image) {
 	i.Height = image.Height
 	i.CreatedAt = image.CreatedAt
 	i.UpdatedAt = image.UpdatedAt
+	i.ImageSizes = []ImageSize{}
 
 	if image.Description.Valid {
 		i.Description = &image.Description.String
+	}
+
+	for index := range image.ImageSizes {
+		imageSize := ImageSize{}
+		imageSize.SetImageSize(&image.ImageSizes[index])
+		i.ImageSizes = append(i.ImageSizes, imageSize)
 	}
 }

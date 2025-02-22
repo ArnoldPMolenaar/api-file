@@ -12,7 +12,6 @@ import (
 	errorutil "github.com/ArnoldPMolenaar/api-utils/errors"
 	"github.com/ArnoldPMolenaar/api-utils/utils"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/log"
 	"github.com/h2non/bimg"
 	"os"
 )
@@ -34,7 +33,6 @@ func GetImage(c *fiber.Ctx) error {
 	}
 
 	// Return the image.
-	log.Debug(image)
 	response := responses.Image{}
 	response.SetImage(&image)
 
@@ -167,6 +165,53 @@ func UpdateImage(c *fiber.Ctx) error {
 	response.SetImage(&image)
 
 	return c.JSON(response)
+}
+
+// DeleteImage func to delete an image.
+func DeleteImage(c *fiber.Ctx) error {
+	// Get the ID from the URL.
+	id, err := utils.StringToUint(c.Params("id"))
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.InvalidParam, err.Error())
+	}
+
+	// Find the image.
+	image, err := services.GetImageById(id, false)
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
+	} else if image.ID == 0 {
+		return errorutil.Response(c, fiber.StatusNotFound, errors.ImageExists, "Image does not exist.")
+	}
+
+	// Delete the image.
+	if err := services.DeleteImage(&image); err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
+	}
+
+	return c.SendStatus(fiber.StatusNoContent)
+}
+
+// RestoreImage func to restore a image.
+func RestoreImage(c *fiber.Ctx) error {
+	// Get the ID from the URL.
+	id, err := utils.StringToUint(c.Params("id"))
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.InvalidParam, err.Error())
+	}
+
+	// Find the image.
+	if deleted, err := services.IsImageDeleted(id); err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
+	} else if !deleted {
+		return errorutil.Response(c, fiber.StatusNotFound, errors.ImageExists, "Image does not exist.")
+	}
+
+	// Restore the folder.
+	if err := services.RestoreImage(id); err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
+	}
+
+	return c.SendStatus(fiber.StatusNoContent)
 }
 
 // Upload the image to the storage path.

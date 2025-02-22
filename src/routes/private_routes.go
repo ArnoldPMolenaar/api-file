@@ -31,6 +31,8 @@ func PrivateRoutes(a *fiber.App) {
 	images.Post("/", controllers.CreateImage)
 	images.Get("/:id", controllers.GetImage)
 	images.Put("/:id", controllers.UpdateImage)
+	images.Delete("/:id", controllers.DeleteImage)
+	images.Put("/:id/restore", controllers.RestoreImage)
 
 	// Register handshake route for websocket.
 	route.Get("/handshake", middleware.MachineProtected(), controllers.Handshake)

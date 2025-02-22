@@ -9,12 +9,26 @@ import (
 // IsImageAvailable method to check if an image is available within the app.
 func IsImageAvailable(folderId uint, name, extension string) (bool, error) {
 	if result := database.Pg.
+		Unscoped().
 		Limit(1).
 		Find(&models.Image{}, "folder_id = ? AND name = ? AND extension = ?", folderId, name, extension); result.Error != nil {
 		return false, result.Error
 	} else {
 		return result.RowsAffected == 1, nil
 	}
+}
+
+// IsImageDeleted method to check if a image is deleted.
+func IsImageDeleted(id uint) (bool, error) {
+	var count int64
+	if result := database.Pg.Model(&models.Image{}).
+		Unscoped().
+		Where("id = ? AND deleted_at IS NOT NULL", id).
+		Count(&count); result.Error != nil {
+		return false, result.Error
+	}
+
+	return count == 1, nil
 }
 
 // GetImageById method to get the image by its ID.
@@ -69,4 +83,25 @@ func UpdateImage(image *models.Image, description string) (models.Image, error) 
 	}
 
 	return *image, nil
+}
+
+// DeleteImage method to delete a image.
+func DeleteImage(image *models.Image) error {
+	if result := database.Pg.Delete(image); result.Error != nil {
+		return result.Error
+	}
+
+	return nil
+}
+
+// RestoreImage method to restore an image.
+func RestoreImage(id uint) error {
+	if result := database.Pg.Model(&models.Image{}).
+		Unscoped().
+		Where("id = ?", id).
+		Update("deleted_at", nil); result.Error != nil {
+		return result.Error
+	}
+
+	return nil
 }

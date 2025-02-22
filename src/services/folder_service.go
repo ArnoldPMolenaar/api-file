@@ -17,7 +17,7 @@ func IsFolderAvailable(appStoragePathID uint, folder string, parentFolderId ...u
 			return false, nil
 		}
 
-		result := database.Pg.Limit(1).Find(&models.Folder{}, "name = ? AND id IN (?)", folder, folderIDs)
+		result := database.Pg.Unscoped().Limit(1).Find(&models.Folder{}, "name = ? AND id IN (?)", folder, folderIDs)
 		if result.Error != nil {
 			return false, result.Error
 		} else {
@@ -26,6 +26,7 @@ func IsFolderAvailable(appStoragePathID uint, folder string, parentFolderId ...u
 	}
 
 	if result := database.Pg.Table("folders").
+		Unscoped().
 		Select("folders.id").
 		Joins("LEFT JOIN folder_folders ON folders.id = folder_folders.folder_id").
 		Where("folders.app_storage_path_id = ? AND folders.name = ? AND folder_folders.folder_id IS NULL", appStoragePathID, folder).

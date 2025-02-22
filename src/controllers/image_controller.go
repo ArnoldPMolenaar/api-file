@@ -70,7 +70,6 @@ func CreateImage(c *fiber.Ctx) error {
 
 	fileProgress := responses.FileProgress{}
 	fileProgress.SetFileProgress(enums.Image, request.Name, 0.0)
-	BroadcastProgress(fileProgress)
 
 	width, height, err := uploadImage(storagePath, request.FolderID, request.Name, data, progress, fileProgress)
 	if err != nil {

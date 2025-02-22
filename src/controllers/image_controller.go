@@ -39,6 +39,75 @@ func GetImage(c *fiber.Ctx) error {
 	return c.JSON(response)
 }
 
+// GetImageFile method to get the image file by ID.
+func GetImageFile(c *fiber.Ctx) error {
+	// Get the ID and size from the URL.
+	id, err := utils.StringToUint(c.Params("id"))
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.InvalidParam, err.Error())
+	}
+
+	// Try to get image from cache.
+	var filePath string
+	filePath, err = services.GetImageFromCache(id)
+
+	if filePath == "" || err != nil {
+		// Get the image.
+		image, err := services.GetImage(id)
+		if err != nil {
+			return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err)
+		} else if image.ID == 0 {
+			return errorutil.Response(c, fiber.StatusNotFound, errors.ImageExists, "Image does not exist.")
+		}
+
+		// Construct the file path.
+		path, err := services.GetPath(&image.Folder.AppStoragePath, image.FolderID)
+		if err != nil {
+			return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err)
+		}
+		filePath = fmt.Sprintf("%s%s.%s", path, image.Name, image.Extension)
+		services.SaveImageToCache(image.ID, filePath)
+	}
+
+	// Send the file as a response.
+	return c.SendFile(filePath)
+}
+
+// GetImageFileSize method to get the image file by ID.
+func GetImageFileSize(c *fiber.Ctx) error {
+	// Get the ID and size from the URL.
+	size := enums.Size(c.Params("size"))
+	id, err := utils.StringToUint(c.Params("id"))
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.InvalidParam, err.Error())
+	}
+
+	// Try to get image from cache.
+	var filePath string
+	filePath, err = services.GetImageFromCache(id, size.String())
+
+	if filePath == "" || err != nil {
+		// Get the image size.
+		imageSize, err := services.GetImageSizeById(id, size)
+		if err != nil {
+			return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err)
+		} else if imageSize.ID == 0 {
+			return errorutil.Response(c, fiber.StatusNotFound, errors.ImageExists, "Image does not exist.")
+		}
+
+		// Construct the file path.
+		path, err := services.GetPath(&imageSize.Image.Folder.AppStoragePath, imageSize.Image.FolderID)
+		if err != nil {
+			return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err)
+		}
+		filePath := fmt.Sprintf("%s%s-%s.webp", path, imageSize.Image.Name, size)
+		services.SaveImageToCache(imageSize.Image.ID, filePath, size.String())
+	}
+
+	// Send the file as a response.
+	return c.SendFile(filePath)
+}
+
 // CreateImage method to create an image.
 func CreateImage(c *fiber.Ctx) error {
 	// Parse the request.
@@ -176,7 +245,7 @@ func DeleteImage(c *fiber.Ctx) error {
 	}
 
 	// Find the image.
-	image, err := services.GetImageById(id, false)
+	image, err := services.GetImageById(id, true)
 	if err != nil {
 		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
 	} else if image.ID == 0 {

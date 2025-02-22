@@ -18,7 +18,7 @@ func CreateHandshake(app, id string) (string, error) {
 	}
 	key := handshakeCacheKey(app, code.String())
 
-	expiration := os.Getenv("VALKEY_EXPIRATION")
+	expiration := os.Getenv("VALKEY_EXPIRATION_HANDSHAKE")
 	duration, err := time.ParseDuration(expiration)
 	if err != nil {
 		return "", err

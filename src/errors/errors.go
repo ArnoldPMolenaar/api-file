@@ -14,5 +14,6 @@ const (
 	ConvertImage         = "convertImage"
 	CodeInvalid          = "codeInvalid"
 	CodeExists           = "codeExists"
+	IORead               = "ioRead"
 	// Add more error codes as needed.
 )

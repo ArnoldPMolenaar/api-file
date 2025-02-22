@@ -12,10 +12,36 @@ import (
 	errorutil "github.com/ArnoldPMolenaar/api-utils/errors"
 	"github.com/ArnoldPMolenaar/api-utils/utils"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/h2non/bimg"
 	"os"
 )
 
+// GetImage method to get the image by ID.
+func GetImage(c *fiber.Ctx) error {
+	// Get the ID from the URL.
+	id, err := utils.StringToUint(c.Params("id"))
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.InvalidParam, err.Error())
+	}
+
+	// Get the image.
+	image, err := services.GetImageById(id, true)
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err)
+	} else if image.ID == 0 {
+		return errorutil.Response(c, fiber.StatusNotFound, errors.ImageExists, "Image does not exist.")
+	}
+
+	// Return the image.
+	log.Debug(image)
+	response := responses.Image{}
+	response.SetImage(&image)
+
+	return c.JSON(response)
+}
+
+// CreateImage method to create an image.
 func CreateImage(c *fiber.Ctx) error {
 	// Parse the request.
 	request := requests.CreateImage{}

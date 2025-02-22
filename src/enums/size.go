@@ -14,7 +14,7 @@ const (
 )
 
 func (s *Size) Scan(value interface{}) error {
-	*s = Size(value.([]byte))
+	*s = Size(value.(string))
 	return nil
 }
 

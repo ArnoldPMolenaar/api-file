@@ -97,6 +97,52 @@ func CreateImage(c *fiber.Ctx) error {
 	return c.JSON(response)
 }
 
+// UpdateImage method to update the image fields like description.
+func UpdateImage(c *fiber.Ctx) error {
+	// Get the ID from the URL.
+	id, err := utils.StringToUint(c.Params("id"))
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.InvalidParam, err.Error())
+	}
+
+	// Parse the request.
+	request := requests.UpdateImage{}
+	if err := c.BodyParser(&request); err != nil {
+		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.BodyParse, err.Error())
+	}
+
+	// Validate image fields.
+	validate := utils.NewValidator()
+	if err := validate.Struct(request); err != nil {
+		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.Validator, utils.ValidatorErrors(err))
+	}
+
+	// Check if the image exists.
+	image, err := services.GetImageById(id, true)
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err)
+	} else if image.ID == 0 {
+		return errorutil.Response(c, fiber.StatusNotFound, errors.ImageExists, "Image does not exist.")
+	}
+
+	// Check if the image data has been modified since it was last fetched.
+	if request.UpdatedAt.Unix() < image.UpdatedAt.Unix() {
+		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.OutOfSync, "Data is out of sync.")
+	}
+
+	// Update the image.
+	image, err = services.UpdateImage(&image, request.Description)
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err)
+	}
+
+	// Return the image.
+	response := responses.Image{}
+	response.SetImage(&image)
+
+	return c.JSON(response)
+}
+
 // Upload the image to the storage path.
 func uploadImage(appStoragePath *models.AppStoragePath, folderID uint, filename string, data []byte, progress float64, fileProgress responses.FileProgress) (int, int, error) {
 	path, err := services.GetPath(appStoragePath, folderID)

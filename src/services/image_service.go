@@ -17,6 +17,22 @@ func IsImageAvailable(folderId uint, name, extension string) (bool, error) {
 	}
 }
 
+// GetImageById method to get the image by its ID.
+func GetImageById(id uint, withSizes bool) (models.Image, error) {
+	image := models.Image{}
+	query := database.Pg
+
+	if withSizes {
+		query = query.Preload("ImageSizes")
+	}
+
+	if result := query.Find(&image, "id = ?", id); result.Error != nil {
+		return models.Image{}, result.Error
+	}
+
+	return image, nil
+}
+
 // CreateImage method to create the image that is uploaded.
 func CreateImage(folderID uint, name, extension, mimeType string, size, with, height int, description *string, sizes []models.ImageSize) (models.Image, error) {
 	image := models.Image{
@@ -41,4 +57,16 @@ func CreateImage(folderID uint, name, extension, mimeType string, size, with, he
 	}
 
 	return image, nil
+}
+
+// UpdateImage method to update the image description.
+func UpdateImage(image *models.Image, description string) (models.Image, error) {
+	image.Description.Valid = description != ""
+	image.Description.String = description
+
+	if result := database.Pg.Save(&image); result.Error != nil {
+		return models.Image{}, result.Error
+	}
+
+	return *image, nil
 }

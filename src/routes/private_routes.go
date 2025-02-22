@@ -29,6 +29,7 @@ func PrivateRoutes(a *fiber.App) {
 	// Register CRUD routes for /v1/images.
 	images := route.Group("/images", middleware.MachineProtected())
 	images.Post("/", controllers.CreateImage)
+	images.Put("/:id", controllers.UpdateImage)
 
 	// Register handshake route for websocket.
 	route.Get("/handshake", middleware.MachineProtected(), controllers.Handshake)

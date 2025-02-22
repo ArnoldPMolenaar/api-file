@@ -122,6 +122,11 @@ func UpdateFolder(c *fiber.Ctx) error {
 		return errorutil.Response(c, fiber.StatusBadRequest, errors.FolderExists, "Folder already exists.")
 	}
 
+	// Check if the folder data has been modified since it was last fetched.
+	if request.UpdatedAt.Unix() < folder.UpdatedAt.Unix() {
+		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.OutOfSync, "Data is out of sync.")
+	}
+
 	// Update the folder.
 	if folder, err = services.UpdateFolder(folder, request.Name, request.Color); err != nil {
 		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())

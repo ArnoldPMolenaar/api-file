@@ -12,7 +12,6 @@ import (
 	errorutil "github.com/ArnoldPMolenaar/api-utils/errors"
 	"github.com/ArnoldPMolenaar/api-utils/utils"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/log"
 	"github.com/h2non/bimg"
 	"os"
 )
@@ -69,7 +68,11 @@ func CreateImage(c *fiber.Ctx) error {
 		progress = 100.0 / 7
 	}
 
-	width, height, err := uploadImage(storagePath, request.FolderID, request.Name, data, progress)
+	fileProgress := responses.FileProgress{}
+	fileProgress.SetFileProgress(enums.Image, request.Name, 0.0)
+	BroadcastProgress(fileProgress)
+
+	width, height, err := uploadImage(storagePath, request.FolderID, request.Name, data, progress, fileProgress)
 	if err != nil {
 		return errorutil.Response(c, fiber.StatusInternalServerError, errors.UploadImage, err)
 	}
@@ -77,7 +80,7 @@ func CreateImage(c *fiber.Ctx) error {
 	// Create web size images.
 	var imageSizes []models.ImageSize
 	if !request.IsNotResizable {
-		if imageSizes, err = convertAndUploadImages(storagePath, request.FolderID, filename, data, request.Quality, progress); err != nil {
+		if imageSizes, err = convertAndUploadImages(storagePath, request.FolderID, filename, data, request.Quality, progress, fileProgress); err != nil {
 			return errorutil.Response(c, fiber.StatusInternalServerError, errors.ConvertImage, err)
 		}
 	}
@@ -96,7 +99,7 @@ func CreateImage(c *fiber.Ctx) error {
 }
 
 // Upload the image to the storage path.
-func uploadImage(appStoragePath *models.AppStoragePath, folderID uint, filename string, data []byte, progress float64) (int, int, error) {
+func uploadImage(appStoragePath *models.AppStoragePath, folderID uint, filename string, data []byte, progress float64, fileProgress responses.FileProgress) (int, int, error) {
 	path, err := services.GetPath(appStoragePath, folderID)
 	if err != nil {
 		return 0, 0, err
@@ -130,22 +133,23 @@ func uploadImage(appStoragePath *models.AppStoragePath, folderID uint, filename 
 			return 0, 0, err
 		}
 		seeker += int64(len(chunk))
-		// TODO: Write process to websocket connection.
 		percentage := float64(i) * 100.0 / float64(len(chunks))
 		if progress == 100.0 {
-			log.Debugf("Processed: %.2f", percentage)
+			fileProgress.Progress = percentage
+			BroadcastProgress(fileProgress)
 		} else {
-			log.Debugf("Processed: %.2f", progress*percentage/100.0)
+			fileProgress.Progress = progress * percentage / 100.0
+			BroadcastProgress(fileProgress)
 		}
 	}
 
-	// TODO: Make here one last process message with 100% or `progress` value.
-	log.Debugf("Processed: %.2f", progress)
+	fileProgress.Progress = progress
+	BroadcastProgress(fileProgress)
 
 	return width, height, err
 }
 
-func convertAndUploadImages(appStoragePath *models.AppStoragePath, folderID uint, filename string, data []byte, quality int, progress float64) ([]models.ImageSize, error) {
+func convertAndUploadImages(appStoragePath *models.AppStoragePath, folderID uint, filename string, data []byte, quality int, progress float64, fileProgress responses.FileProgress) ([]models.ImageSize, error) {
 	var imageSizes []models.ImageSize
 	sizes := map[enums.Size]int{
 		enums.XS:  600,
@@ -213,8 +217,8 @@ func convertAndUploadImages(appStoragePath *models.AppStoragePath, folderID uint
 			Height: s.Height,
 		})
 
-		// TODO: Write process to websocket connection.
-		log.Debugf("Processed: %.2f", progress+calculatedProgress*float64(currentImage))
+		fileProgress.Progress = progress + calculatedProgress*float64(currentImage)
+		BroadcastProgress(fileProgress)
 	}
 
 	return imageSizes, nil

@@ -4,9 +4,11 @@ import (
 	"api-file/main/src/dto/responses"
 	"api-file/main/src/errors"
 	"api-file/main/src/services"
+	"encoding/json"
 	errorutil "github.com/ArnoldPMolenaar/api-utils/errors"
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
+	"log"
 )
 
 // ProgressConnections is a map of WebSocket connections from clients.
@@ -14,13 +16,10 @@ var ProgressConnections = make(map[*websocket.Conn]bool)
 
 // WebSocketProgress is a WebSocket handler that sends progress updates to the client.
 func WebSocketProgress(c *websocket.Conn) {
-	// Retrieve the initial HTTP context.
-	ctx := c.Locals("ctx").(*fiber.Ctx)
-
 	// Access query parameters.
-	app := ctx.Params("app")
-	id := ctx.Params("id")
-	code := ctx.Params("code")
+	app := c.Query("app")
+	id := c.Query("id")
+	code := c.Query("code")
 
 	// Validate the handshake.
 	if value, err := services.GetHandshake(app, code); err != nil {
@@ -51,7 +50,13 @@ func WebSocketProgress(c *websocket.Conn) {
 }
 
 // BroadcastProgress sends a message to all WebSocket connections.
-func BroadcastProgress(message []byte) {
+func BroadcastProgress(data responses.FileProgress) {
+	message, err := json.Marshal(data)
+	if err != nil {
+		log.Printf("Error marshalling data: %v", err)
+		return
+	}
+
 	for c := range ProgressConnections {
 		c.WriteMessage(websocket.TextMessage, message)
 	}
@@ -60,8 +65,8 @@ func BroadcastProgress(message []byte) {
 // Handshake is a WebSocket handler that creates a unique code for the handshake.
 func Handshake(c *fiber.Ctx) error {
 	// Get the ID from the URL.
-	id := c.Params("id")
-	app := c.Params("app")
+	id := c.Query("id")
+	app := c.Query("app")
 
 	// Check if app exists.
 	if available, err := services.IsAppAvailable(app); err != nil {

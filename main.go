@@ -36,6 +36,8 @@ func main() {
 
 	// Register a private routes_util for app.
 	routes.PrivateRoutes(app)
+	// Register a websocket routes_util for app.
+	routes.WebSocketRoutes(app)
 	// Register route for 404 Error.
 	routeutil.NotFoundRoute(app)
 

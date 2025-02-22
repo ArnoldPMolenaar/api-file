@@ -7,7 +7,9 @@ import (
 )
 
 func WebSocketRoutes(a *fiber.App) {
+	route := a.Group("/v1")
+
 	// Create websocket routes group.
-	route := a.Group("/ws")
-	route.Get("/progress", websocket.New(controllers.WebSocketProgress))
+	ws := route.Group("/ws")
+	ws.Get("/progress", websocket.New(controllers.WebSocketProgress))
 }

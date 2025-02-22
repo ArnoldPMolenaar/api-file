@@ -40,7 +40,6 @@ func FiberMiddleware(a *fiber.App) {
 func webSocketMiddleware(c *fiber.Ctx) error {
 	if websocket.IsWebSocketUpgrade(c) {
 		c.Locals("allowed", true)
-		c.Locals("ctx", c)
 		return c.Next()
 	}
 	return fiber.ErrUpgradeRequired

@@ -23,11 +23,11 @@ func WebSocketProgress(c *websocket.Conn) {
 
 	// Validate the handshake.
 	if value, err := services.GetHandshake(app, code); err != nil {
-		c.WriteMessage(websocket.TextMessage, []byte("Handshake failed: "+err.Error()))
+		c.WriteMessage(websocket.TextMessage, []byte(`{"error": "Handshake failed", "message": "`+err.Error()+`", "code": "`+errors.CodeExists+`"}`))
 		c.Close()
 		return
 	} else if value != id {
-		c.WriteMessage(websocket.TextMessage, []byte("Handshake failed: invalid code"))
+		c.WriteMessage(websocket.TextMessage, []byte(`{"error": "Handshake failed", "message": "invalid code", "code": "`+errors.CodeInvalid+`"}`))
 		c.Close()
 		return
 	}

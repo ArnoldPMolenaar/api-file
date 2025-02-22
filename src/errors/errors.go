@@ -12,5 +12,7 @@ const (
 	ParseFilename        = "parseFilename"
 	UploadImage          = "uploadImage"
 	ConvertImage         = "convertImage"
+	CodeInvalid          = "codeInvalid"
+	CodeExists           = "codeExists"
 	// Add more error codes as needed.
 )

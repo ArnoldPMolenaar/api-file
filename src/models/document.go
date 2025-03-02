@@ -7,6 +7,7 @@ type Document struct {
 	FolderID  uint   `gorm:"not null"`
 	Name      string `gorm:"not null"`
 	Extension string `gorm:"not null"`
+	MimeType  string `gorm:"not null"`
 	Size      int    `gorm:"not null"`
 
 	// Relationships.

@@ -15,6 +15,7 @@ type Document struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
+// SetDocument sets the document properties.
 func (d *Document) SetDocument(document *models.Document) {
 	d.ID = document.ID
 	d.FolderID = document.FolderID

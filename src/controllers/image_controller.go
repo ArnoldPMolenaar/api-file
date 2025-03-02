@@ -148,7 +148,7 @@ func CreateImage(c *fiber.Ctx) error {
 	if err != nil {
 		return errorutil.Response(c, fiber.StatusBadRequest, errors.ParseBase64, err)
 	} else if isValid := upload.IsValidImage(mimeType); !isValid {
-		return errorutil.Response(c, fiber.StatusBadRequest, errors.ImageTypeInvalid, "Invalid image.")
+		return errorutil.Response(c, fiber.StatusBadRequest, errors.ImageTypeInvalid, fmt.Sprintf("Invalid image for %s.", mimeType))
 	}
 	data, err := upload.Base64ToBytes(base64Data)
 	if err != nil {
@@ -275,7 +275,7 @@ func RestoreImage(c *fiber.Ctx) error {
 		return errorutil.Response(c, fiber.StatusNotFound, errors.ImageExists, "Image does not exist.")
 	}
 
-	// Restore the folder.
+	// Restore the image.
 	if err := services.RestoreImage(id); err != nil {
 		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
 	}
@@ -334,6 +334,7 @@ func uploadImage(appStoragePath *models.AppStoragePath, folderID uint, filename 
 	return width, height, err
 }
 
+// Convert and upload the images to the storage path.
 func convertAndUploadImages(appStoragePath *models.AppStoragePath, folderID uint, filename string, data []byte, quality int, progress float64, fileProgress responses.FileProgress) ([]models.ImageSize, error) {
 	var imageSizes []models.ImageSize
 	sizes := map[enums.Size]int{

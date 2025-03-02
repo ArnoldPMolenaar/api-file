@@ -46,6 +46,28 @@ func IsValidImage(mimeType string) bool {
 	return validMimeTypes[strings.ToLower(mimeType)]
 }
 
+// IsValidDocument checks if the provided MIME type is valid document.
+func IsValidDocument(mimeType string) bool {
+	validMimeTypes := map[string]bool{
+		"application/pdf":    true,
+		"application/msword": true,
+		"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true,
+		"application/vnd.ms-excel": true,
+		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":         true,
+		"application/vnd.ms-powerpoint":                                             true,
+		"application/vnd.openxmlformats-officedocument.presentationml.presentation": true,
+		"application/zip": true,
+		"application/rtf": true,
+		"text/plain":      true,
+		"application/vnd.oasis.opendocument.text":         true,
+		"application/vnd.oasis.opendocument.spreadsheet":  true,
+		"application/vnd.oasis.opendocument.presentation": true,
+		"application/x-7z-compressed":                     true,
+	}
+
+	return validMimeTypes[strings.ToLower(mimeType)]
+}
+
 // ChunkBytes splits a byte slice into chunks of a specified size.
 // The default chunk size is 4096 bytes.
 func ChunkBytes(data []byte, chunkSize ...int) [][]byte {

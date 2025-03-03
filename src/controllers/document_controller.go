@@ -116,7 +116,7 @@ func CreateDocument(c *fiber.Ctx) error {
 	fileProgress := responses.FileProgress{}
 	fileProgress.SetFileProgress(enums.Document, request.Name, 0.0)
 
-	err = uploadDocument(storagePath, request.FolderID, request.Name, data, fileProgress)
+	err = uploadDocument(storagePath, request.FolderID, request.Name, data, &fileProgress)
 	if err != nil {
 		return errorutil.Response(c, fiber.StatusInternalServerError, errors.UploadDocument, err)
 	}
@@ -182,7 +182,7 @@ func RestoreDocument(c *fiber.Ctx) error {
 }
 
 // Upload the document to the storage path.
-func uploadDocument(appStoragePath *models.AppStoragePath, folderID uint, filename string, data []byte, fileProgress responses.FileProgress) error {
+func uploadDocument(appStoragePath *models.AppStoragePath, folderID uint, filename string, data []byte, fileProgress *responses.FileProgress) error {
 	path, err := services.GetPath(appStoragePath, folderID)
 	if err != nil {
 		return err

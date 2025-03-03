@@ -50,8 +50,8 @@ func WebSocketProgress(c *websocket.Conn) {
 }
 
 // BroadcastProgress sends a message to all WebSocket connections.
-func BroadcastProgress(data responses.FileProgress) {
-	message, err := json.Marshal(data)
+func BroadcastProgress(data *responses.FileProgress) {
+	message, err := json.Marshal(&data)
 	if err != nil {
 		log.Printf("Error marshalling data: %v", err)
 		return

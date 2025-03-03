@@ -164,7 +164,7 @@ func CreateImage(c *fiber.Ctx) error {
 	fileProgress := responses.FileProgress{}
 	fileProgress.SetFileProgress(enums.Image, request.Name, 0.0)
 
-	width, height, err := uploadImage(storagePath, request.FolderID, request.Name, data, progress, fileProgress)
+	width, height, err := uploadImage(storagePath, request.FolderID, request.Name, data, progress, &fileProgress)
 	if err != nil {
 		return errorutil.Response(c, fiber.StatusInternalServerError, errors.UploadImage, err)
 	}
@@ -172,7 +172,7 @@ func CreateImage(c *fiber.Ctx) error {
 	// Create web size images.
 	var imageSizes []models.ImageSize
 	if !request.IsNotResizable {
-		if imageSizes, err = convertAndUploadImages(storagePath, request.FolderID, filename, data, request.Quality, progress, fileProgress); err != nil {
+		if imageSizes, err = convertAndUploadImages(storagePath, request.FolderID, filename, data, request.Quality, progress, &fileProgress); err != nil {
 			return errorutil.Response(c, fiber.StatusInternalServerError, errors.ConvertImage, err)
 		}
 	}
@@ -284,7 +284,7 @@ func RestoreImage(c *fiber.Ctx) error {
 }
 
 // Upload the image to the storage path.
-func uploadImage(appStoragePath *models.AppStoragePath, folderID uint, filename string, data []byte, progress float64, fileProgress responses.FileProgress) (int, int, error) {
+func uploadImage(appStoragePath *models.AppStoragePath, folderID uint, filename string, data []byte, progress float64, fileProgress *responses.FileProgress) (int, int, error) {
 	path, err := services.GetPath(appStoragePath, folderID)
 	if err != nil {
 		return 0, 0, err
@@ -335,7 +335,7 @@ func uploadImage(appStoragePath *models.AppStoragePath, folderID uint, filename 
 }
 
 // Convert and upload the images to the storage path.
-func convertAndUploadImages(appStoragePath *models.AppStoragePath, folderID uint, filename string, data []byte, quality int, progress float64, fileProgress responses.FileProgress) ([]models.ImageSize, error) {
+func convertAndUploadImages(appStoragePath *models.AppStoragePath, folderID uint, filename string, data []byte, quality int, progress float64, fileProgress *responses.FileProgress) ([]models.ImageSize, error) {
 	var imageSizes []models.ImageSize
 	sizes := map[enums.Size]int{
 		enums.XS:  600,

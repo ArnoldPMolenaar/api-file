@@ -54,7 +54,7 @@ func CreateDocument(folderID uint, name, extension, mimeType string, size int) (
 		Size:      size,
 	}
 
-	if result := database.Pg.Create(document); result.Error != nil {
+	if result := database.Pg.Create(&document); result.Error != nil {
 		return models.Document{}, result.Error
 	}
 

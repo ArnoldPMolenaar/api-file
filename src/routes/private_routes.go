@@ -37,7 +37,7 @@ func PrivateRoutes(a *fiber.App) {
 	// Register CRUD routes for /v1/documents.
 	documents := route.Group("/documents", middleware.MachineProtected())
 	documents.Post("/", controllers.CreateDocument)
-	documents.Get("/:id", controllers.GetImage)
+	documents.Get("/:id", controllers.GetDocument)
 	//documents.Put("/:id", controllers.UpdateDocument)
 	documents.Delete("/:id", controllers.DeleteDocument)
 	documents.Put("/:id/restore", controllers.RestoreDocument)

@@ -61,6 +61,20 @@ func CreateDocument(folderID uint, name, extension, mimeType string, size int) (
 	return document, nil
 }
 
+// UpdateDocument method to update a document.
+func UpdateDocument(document *models.Document, name, extension, mimeType string, size int) (models.Document, error) {
+	document.Name = name
+	document.Extension = extension
+	document.MimeType = mimeType
+	document.Size = size
+
+	if result := database.Pg.Save(document); result.Error != nil {
+		return *document, result.Error
+	}
+
+	return *document, nil
+}
+
 // DeleteDocument method to delete a document.
 func DeleteDocument(document *models.Document) error {
 	if result := database.Pg.Delete(document); result.Error != nil {

@@ -114,7 +114,7 @@ func CreateDocument(c *fiber.Ctx) error {
 
 	// Upload the document.
 	fileProgress := responses.FileProgress{}
-	fileProgress.SetFileProgress(enums.Document, request.Name, 0.0)
+	fileProgress.SetFileProgress(storagePath.AppName, enums.Document, request.Name, 0.0)
 
 	err = uploadDocument(storagePath, request.FolderID, request.Name, data, &fileProgress)
 	if err != nil {
@@ -123,6 +123,84 @@ func CreateDocument(c *fiber.Ctx) error {
 
 	// Create the document.
 	document, err := services.CreateDocument(request.FolderID, filename, extension, mimeType, len(data))
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err)
+	}
+
+	// Return the document.
+	response := responses.Document{}
+	response.SetDocument(&document)
+
+	return c.JSON(response)
+}
+
+// UpdateDocument method to update a document.
+func UpdateDocument(c *fiber.Ctx) error {
+	// Get the ID from the URL.
+	id, err := utils.StringToUint(c.Params("id"))
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.InvalidParam, err.Error())
+	}
+
+	// Parse the request.
+	request := requests.UpdateDocument{}
+	if err := c.BodyParser(&request); err != nil {
+		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.BodyParse, err.Error())
+	}
+
+	// Validate document fields.
+	validate := utils.NewValidator()
+	if err := validate.Struct(request); err != nil {
+		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.Validator, utils.ValidatorErrors(err))
+	}
+
+	// Get the document.
+	document, err := services.GetDocumentById(id)
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err)
+	} else if document.ID == 0 {
+		return errorutil.Response(c, fiber.StatusNotFound, errors.DocumentExist, "Document does not exist.")
+	}
+
+	// Check if the document data has been modified since it was last fetched.
+	if request.UpdatedAt.Unix() < document.UpdatedAt.Unix() {
+		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.OutOfSync, "Data is out of sync.")
+	}
+
+	// Extract the extension from the document.
+	filename, extension, err := upload.GetExtensionFromFilename(request.Name)
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusBadRequest, errors.ParseFilename, err)
+	}
+
+	// Convert data to bytes.
+	mimeType, base64Data, err := upload.GetMimeTypeAndBase64(request.Data)
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusBadRequest, errors.ParseBase64, err)
+	} else if isValid := upload.IsValidDocument(mimeType); !isValid {
+		return errorutil.Response(c, fiber.StatusBadRequest, errors.DocumentTypeInvalid, fmt.Sprintf("Invalid document for %s.", mimeType))
+	}
+	data, err := upload.Base64ToBytes(base64Data)
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusBadRequest, errors.ParseBase64, fmt.Sprintf("Error while decoding bytes. Amount of correct parsed bytes: %d", err))
+	}
+
+	// Delete existing document.
+	if err := deleteDocument(&document); err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errors.DeleteDocument, err)
+	}
+
+	// Upload the document.
+	fileProgress := responses.FileProgress{}
+	fileProgress.SetFileProgress(document.Folder.AppStoragePath.AppName, enums.Document, request.Name, 0.0)
+
+	err = uploadDocument(&document.Folder.AppStoragePath, document.FolderID, request.Name, data, &fileProgress)
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errors.UploadDocument, err)
+	}
+
+	// Update the document.
+	document, err = services.UpdateDocument(&document, filename, extension, mimeType, len(data))
 	if err != nil {
 		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err)
 	}
@@ -215,4 +293,18 @@ func uploadDocument(appStoragePath *models.AppStoragePath, folderID uint, filena
 	BroadcastProgress(fileProgress)
 
 	return err
+}
+
+// Delete the document from the storage path.
+func deleteDocument(document *models.Document) error {
+	path, err := services.GetPath(&document.Folder.AppStoragePath, document.FolderID)
+	if err != nil {
+		return err
+	}
+
+	if err := os.Remove(fmt.Sprintf("%s%s.%s", path, document.Name, document.Extension)); err != nil {
+		return err
+	}
+
+	return nil
 }

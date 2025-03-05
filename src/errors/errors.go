@@ -14,9 +14,9 @@ const (
 	ConvertImage         = "convertImage"
 	CodeInvalid          = "codeInvalid"
 	CodeExists           = "codeExists"
-	IORead               = "ioRead"
 	DocumentExist        = "documentExist"
 	DocumentTypeInvalid  = "documentTypeInvalid"
 	UploadDocument       = "uploadDocument"
+	DeleteDocument       = "deleteDocument"
 	// Add more error codes as needed.
 )

@@ -38,7 +38,7 @@ func PrivateRoutes(a *fiber.App) {
 	documents := route.Group("/documents", middleware.MachineProtected())
 	documents.Post("/", controllers.CreateDocument)
 	documents.Get("/:id", controllers.GetDocument)
-	//documents.Put("/:id", controllers.UpdateDocument)
+	documents.Put("/:id", controllers.UpdateDocument)
 	documents.Delete("/:id", controllers.DeleteDocument)
 	documents.Put("/:id/restore", controllers.RestoreDocument)
 

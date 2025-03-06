@@ -223,8 +223,70 @@ func UpdateImage(c *fiber.Ctx) error {
 		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.OutOfSync, "Data is out of sync.")
 	}
 
+	var filename *string
+	var extension *string
+	var mimeType *string
+	var size *int
+	var width *int
+	var height *int
+	var imageSizes *[]models.ImageSize
+
+	if request.Name != nil && request.Data != nil {
+		// Delete the old image.
+		if err := deleteImage(&image); err != nil {
+			return errorutil.Response(c, fiber.StatusInternalServerError, errors.DeleteImage, err)
+		}
+
+		// Extract the extension from the image.
+		parsedFilename, parsedExtension, err := upload.GetExtensionFromFilename(*request.Name)
+		if err != nil {
+			return errorutil.Response(c, fiber.StatusBadRequest, errors.ParseFilename, err)
+		}
+		filename = &parsedFilename
+		extension = &parsedExtension
+
+		// Convert data to bytes.
+		mimeType, base64Data, err := upload.GetMimeTypeAndBase64(*request.Data)
+		if err != nil {
+			return errorutil.Response(c, fiber.StatusBadRequest, errors.ParseBase64, err)
+		} else if isValid := upload.IsValidImage(mimeType); !isValid {
+			return errorutil.Response(c, fiber.StatusBadRequest, errors.ImageTypeInvalid, fmt.Sprintf("Invalid image for %s.", mimeType))
+		}
+		data, err := upload.Base64ToBytes(base64Data)
+		if err != nil {
+			return errorutil.Response(c, fiber.StatusBadRequest, errors.ParseBase64, fmt.Sprintf("Error while decoding bytes. Amount of correct parsed bytes: %d", err))
+		}
+		dataLen := len(data)
+		size = &dataLen
+
+		// Upload the image.
+		progress := 100.0
+		if request.IsNotResizable == nil || !*request.IsNotResizable {
+			progress = 100.0 / 7
+		}
+
+		fileProgress := responses.FileProgress{}
+		fileProgress.SetFileProgress(image.Folder.AppStoragePath.AppName, enums.Image, *request.Name, 0.0)
+
+		imageWidth, imageHeight, err := uploadImage(&image.Folder.AppStoragePath, image.FolderID, *request.Name, data, progress, &fileProgress)
+		if err != nil {
+			return errorutil.Response(c, fiber.StatusInternalServerError, errors.UploadImage, err)
+		}
+		width = &imageWidth
+		height = &imageHeight
+
+		// Create web size images.
+		if request.IsNotResizable == nil || !*request.IsNotResizable {
+			if createdImageSizes, err := convertAndUploadImages(&image.Folder.AppStoragePath, image.FolderID, *filename, data, *request.Quality, progress, &fileProgress); err != nil {
+				return errorutil.Response(c, fiber.StatusInternalServerError, errors.ConvertImage, err)
+			} else {
+				imageSizes = &createdImageSizes
+			}
+		}
+	}
+
 	// Update the image.
-	image, err = services.UpdateImage(&image, request.Description)
+	image, err = services.UpdateImage(&image, filename, extension, mimeType, size, width, height, request.Description, imageSizes)
 	if err != nil {
 		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err)
 	}
@@ -408,4 +470,24 @@ func convertAndUploadImages(appStoragePath *models.AppStoragePath, folderID uint
 	}
 
 	return imageSizes, nil
+}
+
+// Delete the image from the storage path.
+func deleteImage(image *models.Image) error {
+	path, err := services.GetPath(&image.Folder.AppStoragePath, image.FolderID)
+	if err != nil {
+		return err
+	}
+
+	if err := os.Remove(fmt.Sprintf("%s%s.%s", path, image.Name, image.Extension)); err != nil {
+		return err
+	}
+
+	for i := range image.ImageSizes {
+		if err := os.Remove(fmt.Sprintf("%s%s-%s.webp", path, image.Name, image.ImageSizes[i].Size.String())); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

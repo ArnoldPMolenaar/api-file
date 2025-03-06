@@ -40,7 +40,7 @@ func IsImageDeleted(id uint) (bool, error) {
 // GetImageById method to get the image by its ID.
 func GetImageById(id uint, withSizes bool) (models.Image, error) {
 	image := models.Image{}
-	query := database.Pg
+	query := database.Pg.Preload("Folder").Preload("Folder.AppStoragePath")
 
 	if withSizes {
 		query = query.Preload("ImageSizes")
@@ -101,14 +101,14 @@ func GetImageFromCache(id uint, size ...string) (string, error) {
 }
 
 // CreateImage method to create the image that is uploaded.
-func CreateImage(folderID uint, name, extension, mimeType string, size, with, height int, description *string, sizes []models.ImageSize) (models.Image, error) {
+func CreateImage(folderID uint, name, extension, mimeType string, size, width, height int, description *string, sizes []models.ImageSize) (models.Image, error) {
 	image := models.Image{
 		FolderID:    folderID,
 		Name:        name,
 		Extension:   extension,
 		MimeType:    mimeType,
 		Size:        size,
-		Width:       with,
+		Width:       width,
 		Height:      height,
 		Description: sql.NullString{Valid: false, String: ""},
 		ImageSizes:  sizes,
@@ -145,9 +145,37 @@ func SaveImageToCache(imageId uint, path string, size ...string) error {
 }
 
 // UpdateImage method to update the image description.
-func UpdateImage(image *models.Image, description string) (models.Image, error) {
-	image.Description.Valid = description != ""
-	image.Description.String = description
+func UpdateImage(image *models.Image, name, extension, mimeType *string, size, width, height *int, description *string, sizes *[]models.ImageSize) (models.Image, error) {
+	if name != nil {
+		image.Name = *name
+	}
+	if extension != nil {
+		image.Extension = *extension
+	}
+	if mimeType != nil {
+		image.MimeType = *mimeType
+	}
+	if size != nil {
+		image.Size = *size
+	}
+	if width != nil {
+		image.Width = *width
+	}
+	if height != nil {
+		image.Height = *height
+	}
+
+	image.Description.Valid = description != nil && *description != ""
+	if image.Description.Valid {
+		image.Description.String = *description
+	}
+
+	if sizes != nil {
+		if result := database.Pg.Model(&models.ImageSize{}).Unscoped().Delete(&models.ImageSize{}, "image_id = ?", image.ID); result.Error != nil {
+			return *image, result.Error
+		}
+		image.ImageSizes = *sizes
+	}
 
 	if result := database.Pg.Save(&image); result.Error != nil {
 		return models.Image{}, result.Error
@@ -159,6 +187,10 @@ func UpdateImage(image *models.Image, description string) (models.Image, error) 
 // DeleteImage method to delete a image.
 func DeleteImage(image *models.Image) error {
 	if result := database.Pg.Delete(image); result.Error != nil {
+		return result.Error
+	}
+
+	if result := database.Pg.Model(&models.ImageSize{}).Delete(&models.ImageSize{}, "image_id = ?", image.ID); result.Error != nil {
 		return result.Error
 	}
 

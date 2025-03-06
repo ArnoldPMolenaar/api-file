@@ -10,6 +10,7 @@ const (
 	ImageTypeInvalid     = "imageTypeInvalid"
 	ParseBase64          = "parseBase64"
 	ParseFilename        = "parseFilename"
+	DeleteImage          = "deleteImage"
 	UploadImage          = "uploadImage"
 	ConvertImage         = "convertImage"
 	CodeInvalid          = "codeInvalid"

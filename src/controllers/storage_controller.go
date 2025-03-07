@@ -18,9 +18,10 @@ func GetStoragePaths(c *fiber.Ctx) error {
 	storagePaths := make([]models.AppStoragePath, 0)
 	values := c.Request().URI().QueryArgs()
 	allowedColumns := map[string]bool{
-		"id":   true,
-		"app":  true,
-		"path": true,
+		"id":    true,
+		"app":   true,
+		"path":  true,
+		"limit": true,
 	}
 
 	queryFunc := pagination.Query(values, allowedColumns)
@@ -70,9 +71,15 @@ func GetStoragePath(c *fiber.Ctx) error {
 		return errorutil.Response(c, fiber.StatusNotFound, errors.StoragePathExists, "Storage path does not exist.")
 	}
 
+	// Get the used space.
+	usedSpace, err := services.GetUsedSpace(storagePath.ID)
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
+	}
+
 	// Return the storage path.
 	response := responses.AppStoragePath{}
-	response.SetAppStoragePath(storagePath)
+	response.SetAppStoragePath(storagePath, usedSpace)
 
 	return c.JSON(response)
 }
@@ -106,14 +113,14 @@ func CreateStoragePath(c *fiber.Ctx) error {
 	}
 
 	// Create the storage path.
-	storagePath, err := services.CreateStoragePath(request.App, request.Path)
+	storagePath, err := services.CreateStoragePath(request.App, request.Path, request.Limit)
 	if err != nil {
 		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
 	}
 
 	// Return the storage path.
 	response := responses.AppStoragePath{}
-	response.SetAppStoragePath(storagePath)
+	response.SetAppStoragePath(storagePath, 0)
 
 	return c.JSON(response)
 }
@@ -161,14 +168,20 @@ func UpdateStoragePath(c *fiber.Ctx) error {
 	}
 
 	// Update the storage path.
-	storagePath, err = services.UpdateStoragePath(storagePath, request.App, request.Path)
+	storagePath, err = services.UpdateStoragePath(storagePath, request.App, request.Path, request.Limit)
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
+	}
+
+	// Get the used space.
+	usedSpace, err := services.GetUsedSpace(storagePath.ID)
 	if err != nil {
 		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
 	}
 
 	// Return the storage path.
 	response := responses.AppStoragePath{}
-	response.SetAppStoragePath(storagePath)
+	response.SetAppStoragePath(storagePath, usedSpace)
 
 	return c.JSON(response)
 }

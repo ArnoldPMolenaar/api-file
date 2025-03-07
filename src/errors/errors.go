@@ -5,6 +5,7 @@ const (
 	AppExists            = "appExists"
 	StoragePathExists    = "storagePathExists"
 	StoragePathAvailable = "storagePathAvailable"
+	StoragePathFull      = "storagePathFull"
 	FolderExists         = "folderExists"
 	ImageExists          = "imageExists"
 	ImageTypeInvalid     = "imageTypeInvalid"

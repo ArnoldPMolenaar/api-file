@@ -3,6 +3,7 @@ package services
 import (
 	"api-file/main/src/database"
 	"api-file/main/src/models"
+	"database/sql"
 	"os"
 )
 
@@ -15,6 +16,23 @@ func IsStorageAvailable(app, path string) (bool, error) {
 	}
 }
 
+// IsStorageSpaceAvailable method to check if there is space available in the storage path.
+func IsStorageSpaceAvailable(appStoragePathID uint) (bool, error) {
+	var limit int64
+	usedSpace, err := GetUsedSpace(appStoragePathID)
+	if err != nil {
+		return false, err
+	}
+
+	if result := database.Pg.Model(&models.AppStoragePath{}).
+		Find(&limit, "id = ?", appStoragePathID).
+		Pluck("limit", &limit); result.Error != nil {
+		return false, result.Error
+	}
+
+	return usedSpace < limit, nil
+}
+
 // GetPath method to get the full path.
 func GetPath(appStoragePath *models.AppStoragePath, folderID uint) (string, error) {
 	path := os.Getenv("PATH_FILES") + appStoragePath.Path
@@ -25,6 +43,22 @@ func GetPath(appStoragePath *models.AppStoragePath, folderID uint) (string, erro
 	}
 
 	return path + folderPath, nil
+}
+
+// GetUsedSpace method to get the used space for the app.
+func GetUsedSpace(appStoragePathID uint) (int64, error) {
+	var usedSpace int64
+
+	if result := database.Pg.Model(&models.AppStoragePath{}).
+		Select("SUM(images.size) + SUM(documents.size)").
+		Joins("JOIN folders ON folders.app_storage_path_id = ?", appStoragePathID).
+		Joins("JOIN images ON images.folder_id = folders.id").
+		Joins("JOIN documents ON documents.folder_id = folders.id").
+		Scan(&usedSpace); result.Error != nil {
+		return 0, result.Error
+	}
+
+	return usedSpace, nil
 }
 
 // GetStoragePath method to get a storage path for the app.
@@ -47,8 +81,16 @@ func GetStoragePath(id uint) (*models.AppStoragePath, error) {
 }
 
 // CreateStoragePath method to create a storage path for the app.
-func CreateStoragePath(app, path string) (*models.AppStoragePath, error) {
-	storagePath := &models.AppStoragePath{AppName: app, Path: path}
+func CreateStoragePath(app, path string, limit *int64) (*models.AppStoragePath, error) {
+	nullableLimit := sql.NullInt64{}
+	if limit != nil {
+		nullableLimit.Int64 = *limit
+		nullableLimit.Valid = true
+	} else {
+		nullableLimit.Valid = false
+	}
+
+	storagePath := &models.AppStoragePath{AppName: app, Path: path, Limit: nullableLimit}
 
 	if result := database.Pg.Create(storagePath); result.Error != nil {
 		return nil, result.Error
@@ -58,9 +100,16 @@ func CreateStoragePath(app, path string) (*models.AppStoragePath, error) {
 }
 
 // UpdateStoragePath method to update a storage path for the app.
-func UpdateStoragePath(oldStoragePath *models.AppStoragePath, app, path string) (*models.AppStoragePath, error) {
+func UpdateStoragePath(oldStoragePath *models.AppStoragePath, app, path string, limit *int64) (*models.AppStoragePath, error) {
 	oldStoragePath.AppName = app
 	oldStoragePath.Path = path
+
+	if limit != nil {
+		oldStoragePath.Limit.Int64 = *limit
+		oldStoragePath.Limit.Valid = true
+	} else {
+		oldStoragePath.Limit.Valid = false
+	}
 
 	if result := database.Pg.Save(oldStoragePath); result.Error != nil {
 		return nil, result.Error

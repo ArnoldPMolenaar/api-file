@@ -130,6 +130,13 @@ func CreateImage(c *fiber.Ctx) error {
 		return errorutil.Response(c, fiber.StatusNotFound, errors.StoragePathExists, "Storage path does not exist.")
 	}
 
+	// Check if the storage path is full.
+	if available, err := services.IsStorageSpaceAvailable(request.AppStoragePathID); err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err)
+	} else if !available {
+		return errorutil.Response(c, fiber.StatusBadRequest, errors.StoragePathFull, "Storage path is full.")
+	}
+
 	// Extract the extension from the image.
 	filename, extension, err := upload.GetExtensionFromFilename(request.Name)
 	if err != nil {

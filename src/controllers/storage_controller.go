@@ -152,19 +152,21 @@ func UpdateStoragePath(c *fiber.Ctx) error {
 		return errorutil.Response(c, fiber.StatusBadRequest, errors.AppExists, "AppName does not exist.")
 	}
 
-	// Check if storage path exists.
-	if available, err := services.IsStorageAvailable(request.App, request.Path); err != nil {
-		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
-	} else if available {
-		return errorutil.Response(c, fiber.StatusBadRequest, errors.StoragePathAvailable, "Storage path already available.")
-	}
-
 	// Find the storage path.
 	storagePath, err := services.GetStoragePath(id)
 	if err != nil {
 		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
 	} else if storagePath == nil || storagePath.ID == 0 {
 		return errorutil.Response(c, fiber.StatusNotFound, errors.StoragePathExists, "Storage path does not exist.")
+	}
+
+	// Check if storage path exists.
+	if request.App != storagePath.AppName || request.Path != storagePath.Path {
+		if available, err := services.IsStorageAvailable(request.App, request.Path); err != nil {
+			return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
+		} else if available {
+			return errorutil.Response(c, fiber.StatusBadRequest, errors.StoragePathAvailable, "Storage path already available.")
+		}
 	}
 
 	// Update the storage path.

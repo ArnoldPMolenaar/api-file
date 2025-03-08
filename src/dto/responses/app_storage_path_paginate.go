@@ -7,6 +7,7 @@ type AppStoragePathPaginate struct {
 	ID      uint   `json:"id"`
 	AppName string `json:"app_name"`
 	Path    string `json:"path"`
+	Limit   *int64 `json:"limit"`
 }
 
 // SetAppStoragePathPaginate sets the AppStoragePath response.
@@ -14,4 +15,8 @@ func (response *AppStoragePathPaginate) SetAppStoragePathPaginate(appStoragePath
 	response.ID = appStoragePath.ID
 	response.AppName = appStoragePath.AppName
 	response.Path = appStoragePath.Path
+
+	if appStoragePath.Limit.Valid {
+		response.Limit = &appStoragePath.Limit.Int64
+	}
 }

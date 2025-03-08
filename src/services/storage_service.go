@@ -18,19 +18,20 @@ func IsStorageAvailable(app, path string) (bool, error) {
 
 // IsStorageSpaceAvailable method to check if there is space available in the storage path.
 func IsStorageSpaceAvailable(appStoragePathID uint) (bool, error) {
-	var limit int64
+	var limit sql.NullInt64
 	usedSpace, err := GetUsedSpace(appStoragePathID)
 	if err != nil {
 		return false, err
 	}
 
 	if result := database.Pg.Model(&models.AppStoragePath{}).
+		Select("limit").
 		Find(&limit, "id = ?", appStoragePathID).
-		Pluck("limit", &limit); result.Error != nil {
+		Scan(&limit); result.Error != nil {
 		return false, result.Error
 	}
 
-	return usedSpace < limit, nil
+	return !limit.Valid || usedSpace < limit.Int64, nil
 }
 
 // GetPath method to get the full path.

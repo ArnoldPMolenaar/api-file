@@ -66,7 +66,7 @@ func GetImageFile(c *fiber.Ctx) error {
 			return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err)
 		}
 		filePath = fmt.Sprintf("%s%s.%s", path, image.Name, image.Extension)
-		services.SaveImageToCache(image.ID, filePath)
+		_ = services.SaveImageToCache(image.ID, filePath)
 	}
 
 	// Send the file as a response.
@@ -101,7 +101,7 @@ func GetImageFileSize(c *fiber.Ctx) error {
 			return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err)
 		}
 		filePath := fmt.Sprintf("%s%s-%s.webp", path, imageSize.Image.Name, size)
-		services.SaveImageToCache(imageSize.Image.ID, filePath, size.String())
+		_ = services.SaveImageToCache(imageSize.Image.ID, filePath, size.String())
 	}
 
 	// Send the file as a response.

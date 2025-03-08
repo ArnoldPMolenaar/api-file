@@ -194,9 +194,9 @@ func DeleteImage(image *models.Image) error {
 		return result.Error
 	}
 
-	DeleteImageFromCache(image.ID)
+	_ = DeleteImageFromCache(image.ID)
 	for i := range image.ImageSizes {
-		DeleteImageFromCache(image.ID, image.ImageSizes[i].Size.String())
+		_ = DeleteImageFromCache(image.ID, image.ImageSizes[i].Size.String())
 	}
 
 	return nil

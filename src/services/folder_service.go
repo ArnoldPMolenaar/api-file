@@ -83,9 +83,7 @@ func GetFolderPath(appStoragePathID, folderID uint) (string, error) {
 }
 
 // GetFolder method to get a folder.
-func GetFolder(id uint, preload ...bool) (*models.Folder, []*models.Folder, error) {
-	var folders []*models.Folder
-	folder := &models.Folder{}
+func GetFolder(id uint, preload ...bool) (folder *models.Folder, folders []*models.Folder, err error) {
 	query := database.Pg
 
 	if len(preload) > 0 && preload[0] {
@@ -98,8 +96,8 @@ func GetFolder(id uint, preload ...bool) (*models.Folder, []*models.Folder, erro
 
 	if len(folder.Folders) > 0 {
 		folderIDs := make([]uint, len(folder.Folders))
-		for i, f := range folder.Folders {
-			folderIDs[i] = f.FolderID
+		for i := range folder.Folders {
+			folderIDs[i] = folder.Folders[i].FolderID
 		}
 		if result := database.Pg.Find(&folders, "id IN (?)", folderIDs); result.Error != nil {
 			return nil, folders, result.Error

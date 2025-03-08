@@ -353,7 +353,7 @@ func RestoreImage(c *fiber.Ctx) error {
 }
 
 // Upload the image to the storage path.
-func uploadImage(appStoragePath *models.AppStoragePath, folderID uint, filename string, data []byte, progress float64, fileProgress *responses.FileProgress) (int, int, error) {
+func uploadImage(appStoragePath *models.AppStoragePath, folderID uint, filename string, data []byte, progress float64, fileProgress *responses.FileProgress) (width, height int, err error) {
 	path, err := services.GetPath(appStoragePath, folderID)
 	if err != nil {
 		return 0, 0, err
@@ -370,8 +370,8 @@ func uploadImage(appStoragePath *models.AppStoragePath, folderID uint, filename 
 		return 0, 0, err
 	}
 
-	width := size.Width
-	height := size.Height
+	width = size.Width
+	height = size.Height
 	chunks := upload.ChunkBytes(data)
 
 	file, err := os.OpenFile(path+filename, os.O_WRONLY|os.O_CREATE, os.ModePerm)

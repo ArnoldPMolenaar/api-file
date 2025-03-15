@@ -1,9 +1,9 @@
 package models
 
 type FolderFolder struct {
-	AppStoragePathID uint `gorm:"not null"`
-	FolderID         uint `gorm:"not null"`
-	ParentFolderID   uint `gorm:"not null"`
+	AppStoragePathID uint `gorm:"primaryKey;autoIncrement:false"`
+	FolderID         uint `gorm:"primaryKey;autoIncrement:false"`
+	ParentFolderID   uint `gorm:"primaryKey;autoIncrement:false"`
 
 	// Relationships.
 	AppStoragePath AppStoragePath `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:AppStoragePathID;references:ID"`

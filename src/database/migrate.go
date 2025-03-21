@@ -30,13 +30,5 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
-	// Seed App.
-	apps := []string{"Admin"}
-	for _, app := range apps {
-		if err := db.FirstOrCreate(&models.App{}, models.App{Name: app}).Error; err != nil {
-			return err
-		}
-	}
-
 	return nil
 }

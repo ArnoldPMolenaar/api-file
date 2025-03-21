@@ -11,6 +11,9 @@ func PrivateRoutes(a *fiber.App) {
 	// Create private routes group.
 	route := a.Group("/v1")
 
+	// Register route for /v1/apps.
+	route.Post("/apps", controllers.CreateApp)
+
 	// Register CRU routes for /v1/storage-paths.
 	storagePaths := route.Group("/storage-paths", middleware.MachineProtected())
 	storagePaths.Get("/", controllers.GetStoragePaths)

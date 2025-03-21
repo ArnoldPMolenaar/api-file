@@ -16,6 +16,9 @@ Uploads can be recorded and tracked in real-time using the WebSocket routes prov
 
 ### Private Routes
 
+- **Apps**
+    - `POST /v1/apps/` - Create a new app
+
 - **Storage Paths**
     - `GET /v1/storage-paths/` - Get all storage paths
     - `POST /v1/storage-paths/` - Create a new storage path

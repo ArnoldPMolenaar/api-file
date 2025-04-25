@@ -51,7 +51,7 @@ func GetUsedSpace(appStoragePathID uint) (int64, error) {
 	var usedSpace int64
 
 	if result := database.Pg.Model(&models.AppStoragePath{}).
-		Select("SUM(images.size) + SUM(documents.size)").
+		Select("COALESCE(SUM(images.size), 0) + COALESCE(SUM(documents.size), 0)").
 		Joins("JOIN folders ON folders.app_storage_path_id = ?", appStoragePathID).
 		Joins("JOIN images ON images.folder_id = folders.id").
 		Joins("JOIN documents ON documents.folder_id = folders.id").

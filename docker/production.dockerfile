@@ -20,7 +20,12 @@ COPY . .
 ENV GOOS=linux GOARCH=amd64
 RUN go build -a -installsuffix cgo -ldflags="-s -w" -o api .
 
-FROM scratch
+# Use a minimal runtime image
+FROM alpine:latest
+
+# Install libvips
+RUN apk update &&\
+    apk add --update --no-cache gcc g++ vips vips-dev
 
 # Copy binary and config files from /build to root folder of scratch container.
 COPY --from=builder ["/build/api", "/build/.env", "/"]

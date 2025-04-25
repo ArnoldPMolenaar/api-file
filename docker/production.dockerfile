@@ -2,6 +2,10 @@ FROM golang:1.23-alpine AS builder
 
 LABEL authors="Arnold Molenaar <arnold.molenaar@webmi.nl> (https://arnoldmolenaar.nl/)"
 
+# Install libvips
+RUN apk update &&\
+    apk add --update --no-cache gcc g++ vips vips-dev
+
 # Move to working directory (/build).
 WORKDIR /build
 
@@ -13,8 +17,8 @@ RUN go mod download && go mod verify
 COPY . .
 
 # Set necessary environment variables needed for our image and build the API.
-ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
-RUN go build -ldflags="-s -w" -o api .
+ENV GOOS=linux GOARCH=amd64
+RUN go build -a -installsuffix cgo -ldflags="-s -w" -o api .
 
 FROM scratch
 

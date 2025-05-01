@@ -243,6 +243,35 @@ func DeleteDocument(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
+// DeleteDocument func to delete an document.
+func DeleteDocumentHard(c *fiber.Ctx) error {
+	// Get the ID from the URL.
+	id, err := utils.StringToUint(c.Params("id"))
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.InvalidParam, err.Error())
+	}
+
+	// Find the document.
+	document, err := services.GetDocumentById(id)
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
+	} else if document.ID == 0 {
+		return errorutil.Response(c, fiber.StatusNotFound, errors.DocumentExist, "Document does not exist.")
+	}
+
+	// Delete the document.
+	if err := services.DeleteDocument(&document, true); err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
+	}
+
+	// Delete the document from the storage.
+	if err := deleteDocument(&document); err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.InternalServerError, err.Error())
+	}
+
+	return c.SendStatus(fiber.StatusNoContent)
+}
+
 // RestoreDocument func to restore a document.
 func RestoreDocument(c *fiber.Ctx) error {
 	// Get the ID from the URL.

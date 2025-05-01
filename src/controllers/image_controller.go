@@ -329,6 +329,35 @@ func DeleteImage(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
+// DeleteImageHard func to delete an image for ever.
+func DeleteImageHard(c *fiber.Ctx) error {
+	// Get the ID from the URL.
+	id, err := utils.StringToUint(c.Params("id"))
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.InvalidParam, err.Error())
+	}
+
+	// Find the image.
+	image, err := services.GetImageById(id, true)
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
+	} else if image.ID == 0 {
+		return errorutil.Response(c, fiber.StatusNotFound, errors.ImageExists, "Image does not exist.")
+	}
+
+	// Delete the image.
+	if err := services.DeleteImage(&image, true); err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
+	}
+
+	// Delete the image from the storage path.
+	if err := deleteImage(&image); err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.InternalServerError, err.Error())
+	}
+
+	return c.SendStatus(fiber.StatusNoContent)
+}
+
 // RestoreImage func to restore a image.
 func RestoreImage(c *fiber.Ctx) error {
 	// Get the ID from the URL.

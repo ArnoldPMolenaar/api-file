@@ -35,6 +35,7 @@ func PrivateRoutes(a *fiber.App) {
 	images.Get("/:id", controllers.GetImage)
 	images.Put("/:id", controllers.UpdateImage)
 	images.Delete("/:id", controllers.DeleteImage)
+	images.Delete("/:id/hard", controllers.DeleteImageHard)
 	images.Put("/:id/restore", controllers.RestoreImage)
 
 	// Register CRUD routes for /v1/documents.
@@ -43,6 +44,7 @@ func PrivateRoutes(a *fiber.App) {
 	documents.Get("/:id", controllers.GetDocument)
 	documents.Put("/:id", controllers.UpdateDocument)
 	documents.Delete("/:id", controllers.DeleteDocument)
+	documents.Delete("/:id/hard", controllers.DeleteDocumentHard)
 	documents.Put("/:id/restore", controllers.RestoreDocument)
 
 	// Register handshake route for websocket.

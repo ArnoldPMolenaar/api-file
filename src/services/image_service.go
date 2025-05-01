@@ -185,12 +185,19 @@ func UpdateImage(image *models.Image, name, extension, mimeType *string, size, w
 }
 
 // DeleteImage method to delete a image.
-func DeleteImage(image *models.Image) error {
-	if result := database.Pg.Delete(image); result.Error != nil {
+func DeleteImage(image *models.Image, hard ...bool) error {
+	query1 := database.Pg
+	query2 := database.Pg.Model(&models.ImageSize{})
+	if len(hard) > 0 && hard[0] == true {
+		query1 = query1.Unscoped()
+		query2 = query2.Unscoped()
+	}
+
+	if result := query1.Delete(image); result.Error != nil {
 		return result.Error
 	}
 
-	if result := database.Pg.Model(&models.ImageSize{}).Delete(&models.ImageSize{}, "image_id = ?", image.ID); result.Error != nil {
+	if result := query2.Delete(&models.ImageSize{}, "image_id = ?", image.ID); result.Error != nil {
 		return result.Error
 	}
 

@@ -5,7 +5,7 @@ import "api-file/main/src/models"
 // AppStoragePath struct for the AppStoragePath response.
 type AppStoragePath struct {
 	ID      uint     `json:"id"`
-	AppName string   `json:"app_name"`
+	AppName string   `json:"appName"`
 	Path    string   `json:"path"`
 	Limit   *int64   `json:"limit"`
 	Used    int64    `json:"used"`

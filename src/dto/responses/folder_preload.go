@@ -7,7 +7,7 @@ import (
 
 type FolderPreload struct {
 	ID               uint       `json:"id"`
-	AppStoragePathID uint       `json:"app_storage_path_id"`
+	AppStoragePathID uint       `json:"appStoragePathId"`
 	Name             string     `json:"name"`
 	Color            string     `json:"color"`
 	CreatedAt        time.Time  `json:"createdAt"`

@@ -5,7 +5,7 @@ import "api-file/main/src/models"
 // AppStoragePathPaginate struct for the AppStoragePath response.
 type AppStoragePathPaginate struct {
 	ID      uint   `json:"id"`
-	AppName string `json:"app_name"`
+	AppName string `json:"appName"`
 	Path    string `json:"path"`
 	Limit   *int64 `json:"limit"`
 }

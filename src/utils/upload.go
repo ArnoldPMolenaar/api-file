@@ -14,7 +14,7 @@ func Base64ToBytes(value string) ([]byte, error) {
 // GetMimeTypeAndBase64 extracts the mimetype and data from a base64 string.
 func GetMimeTypeAndBase64(value string) (mimeType, data string, err error) {
 	if idx := strings.Index(value, ";base64,"); idx != -1 {
-		mimeType = value[:idx]
+		mimeType = strings.TrimPrefix(value[:idx], "data:")
 		data = value[idx+8:]
 
 		return mimeType, data, nil

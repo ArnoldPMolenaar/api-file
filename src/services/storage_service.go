@@ -48,18 +48,25 @@ func GetPath(appStoragePath *models.AppStoragePath, folderID uint) (string, erro
 
 // GetUsedSpace method to get the used space for the app.
 func GetUsedSpace(appStoragePathID uint) (int64, error) {
-	var usedSpace int64
+	var imagesSize, documentsSize int64
 
-	if result := database.Pg.Model(&models.AppStoragePath{}).
-		Select("COALESCE(SUM(images.size), 0) + COALESCE(SUM(documents.size), 0)").
-		Joins("JOIN folders ON folders.app_storage_path_id = ?", appStoragePathID).
-		Joins("JOIN images ON images.folder_id = folders.id").
-		Joins("JOIN documents ON documents.folder_id = folders.id").
-		Scan(&usedSpace); result.Error != nil {
+	// Sum images size
+	if result := database.Pg.Model(&models.Image{}).
+		Joins("JOIN folders ON images.folder_id = folders.id").
+		Where("folders.app_storage_path_id = ?", appStoragePathID).
+		Select("COALESCE(SUM(images.size), 0)").Scan(&imagesSize); result.Error != nil {
 		return 0, result.Error
 	}
 
-	return usedSpace, nil
+	// Sum documents size
+	if result := database.Pg.Model(&models.Document{}).
+		Joins("JOIN folders ON documents.folder_id = folders.id").
+		Where("folders.app_storage_path_id = ?", appStoragePathID).
+		Select("COALESCE(SUM(documents.size), 0)").Scan(&documentsSize); result.Error != nil {
+		return 0, result.Error
+	}
+
+	return imagesSize + documentsSize, nil
 }
 
 // GetStoragePath method to get a storage path for the app.

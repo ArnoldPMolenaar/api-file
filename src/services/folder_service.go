@@ -88,7 +88,7 @@ func GetFolder(id uint, preload ...bool) (folder *models.Folder, folders []*mode
 	query := database.Pg
 
 	if len(preload) > 0 && preload[0] {
-		query = query.Preload("Folders").Preload("Images").Preload("Documents")
+		query = query.Preload("Folders").Preload("Images.ImageSizes").Preload("Documents")
 	}
 
 	if result := query.Find(folder, "id = ?", id); result.Error != nil {

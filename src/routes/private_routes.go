@@ -2,6 +2,7 @@ package routes
 
 import (
 	"api-file/main/src/controllers"
+
 	"github.com/ArnoldPMolenaar/api-utils/middleware"
 	"github.com/gofiber/fiber/v2"
 )
@@ -18,6 +19,7 @@ func PrivateRoutes(a *fiber.App) {
 	storagePaths := route.Group("/storage-paths", middleware.MachineProtected())
 	storagePaths.Get("/", controllers.GetStoragePaths)
 	storagePaths.Post("/", controllers.CreateStoragePath)
+	storagePaths.Get("/id", controllers.GetStoragePathIDByApp)
 	storagePaths.Get("/:id", controllers.GetStoragePath)
 	storagePaths.Put("/:id", controllers.UpdateStoragePath)
 

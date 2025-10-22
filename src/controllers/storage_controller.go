@@ -7,6 +7,7 @@ import (
 	"api-file/main/src/errors"
 	"api-file/main/src/models"
 	"api-file/main/src/services"
+
 	errorutil "github.com/ArnoldPMolenaar/api-utils/errors"
 	"github.com/ArnoldPMolenaar/api-utils/pagination"
 	"github.com/ArnoldPMolenaar/api-utils/utils"
@@ -80,6 +81,34 @@ func GetStoragePath(c *fiber.Ctx) error {
 	// Return the storage path.
 	response := responses.AppStoragePath{}
 	response.SetAppStoragePath(storagePath, usedSpace)
+
+	return c.JSON(response)
+}
+
+// GetStoragePathIDByApp func to get the storage path ID by app name.
+func GetStoragePathIDByApp(c *fiber.Ctx) error {
+	// Get the app name from the query.
+	app := c.Query("app", "")
+	if app == "" {
+		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.InvalidParam, "App name is required.")
+	}
+
+	// Check if the app name is valid.
+	if available, err := services.IsAppAvailable(app); err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
+	} else if !available {
+		return errorutil.Response(c, fiber.StatusBadRequest, errors.AppExists, "AppName does not exist.")
+	}
+
+	// Get the storage path ID.
+	storagePathID, err := services.GetStoragePathIDByApp(app)
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
+	}
+
+	// Return the storage path ID.
+	response := responses.AppStoragePathID{}
+	response.AppStoragePathID = storagePathID
 
 	return c.JSON(response)
 }

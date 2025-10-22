@@ -34,6 +34,21 @@ func IsStorageSpaceAvailable(appStoragePathID uint) (bool, error) {
 	return !limit.Valid || usedSpace < limit.Int64, nil
 }
 
+// GetStoragePathIDByApp method to get the storage path ID by app name.
+func GetStoragePathIDByApp(app string) (*uint, error) {
+	var storagePathID *uint
+
+	if result := database.Pg.Model(&models.AppStoragePath{}).
+		Select("id").
+		Where("app_name = ?", app).
+		Limit(1).
+		Scan(&storagePathID); result.Error != nil {
+		return nil, result.Error
+	}
+
+	return storagePathID, nil
+}
+
 // GetPath method to get the full path.
 func GetPath(appStoragePath *models.AppStoragePath, folderID uint) (string, error) {
 	path := os.Getenv("PATH_FILES") + appStoragePath.Path

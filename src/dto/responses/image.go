@@ -6,23 +6,25 @@ import (
 )
 
 type Image struct {
-	ID          uint        `json:"id"`
-	FolderID    uint        `json:"folderId"`
-	Name        string      `json:"name"`
-	Extension   string      `json:"extension"`
-	Size        int         `json:"size"`
-	Width       int         `json:"width"`
-	Height      int         `json:"height"`
-	Description *string     `json:"description"`
-	CreatedAt   time.Time   `json:"createdAt"`
-	UpdatedAt   time.Time   `json:"updatedAt"`
-	ImageSizes  []ImageSize `json:"sizes"`
+	ID               uint        `json:"id"`
+	FolderID         uint        `json:"folderId"`
+	AppStoragePathID uint        `json:"appStoragePathId"`
+	Name             string      `json:"name"`
+	Extension        string      `json:"extension"`
+	Size             int         `json:"size"`
+	Width            int         `json:"width"`
+	Height           int         `json:"height"`
+	Description      *string     `json:"description"`
+	CreatedAt        time.Time   `json:"createdAt"`
+	UpdatedAt        time.Time   `json:"updatedAt"`
+	ImageSizes       []ImageSize `json:"sizes"`
 }
 
 // SetImage method to set an image.
 func (i *Image) SetImage(image *models.Image) {
 	i.ID = image.ID
 	i.FolderID = image.FolderID
+	i.AppStoragePathID = image.Folder.AppStoragePathID
 	i.Name = image.Name
 	i.Extension = image.Extension
 	i.Size = image.Size

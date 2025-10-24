@@ -5,10 +5,12 @@ import (
 	"api-file/main/src/errors"
 	"api-file/main/src/services"
 	"encoding/json"
+	"log"
+	"strconv"
+
 	errorutil "github.com/ArnoldPMolenaar/api-utils/errors"
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
-	"log"
 )
 
 // ProgressConnections is a map of WebSocket connections from clients.
@@ -65,8 +67,13 @@ func BroadcastProgress(data *responses.FileProgress) {
 // Handshake is a WebSocket handler that creates a unique code for the handshake.
 func Handshake(c *fiber.Ctx) error {
 	// Get the ID from the URL.
-	id := c.Query("id")
+	appStoragePathIdParam := c.Query("id")
 	app := c.Query("app")
+	appStoragePathId, err := strconv.ParseUint(appStoragePathIdParam, 0, 32)
+
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.InvalidParam, "AppStoragePathId is invalid.")
+	}
 
 	// Check if app exists.
 	if available, err := services.IsAppAvailable(app); err != nil {
@@ -75,8 +82,15 @@ func Handshake(c *fiber.Ctx) error {
 		return errorutil.Response(c, fiber.StatusBadRequest, errors.AppExists, "AppName does not exist.")
 	}
 
+	// Check if storage path exists within the app.
+	if id, err := services.GetStoragePathIDByApp(app); err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
+	} else if id == nil || *id != uint(appStoragePathId) {
+		return errorutil.Response(c, fiber.StatusBadRequest, errors.StoragePathExists, "Storage path does not exist within the app.")
+	}
+
 	// Create unique code for the handshake.
-	code, err := services.CreateHandshake(app, id)
+	code, err := services.CreateHandshake(app, uint(appStoragePathId))
 	if err != nil {
 		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.CacheError, err.Error())
 	}

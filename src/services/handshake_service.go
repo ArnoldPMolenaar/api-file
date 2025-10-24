@@ -5,13 +5,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"os"
+	"strconv"
 	"time"
+
+	"github.com/google/uuid"
 )
 
-// CreateHandshake creates a handshake code for the given id.
-func CreateHandshake(app, id string) (string, error) {
+// CreateHandshake creates a handshake code for the given appStoragePathId.
+func CreateHandshake(app string, appStoragePathId uint) (string, error) {
 	code, err := uuid.NewUUID()
 	if err != nil {
 		return "", errors.New("failed to generate handshake code")
@@ -24,7 +26,7 @@ func CreateHandshake(app, id string) (string, error) {
 		return "", err
 	}
 
-	result := cache.Valkey.Do(context.Background(), cache.Valkey.B().Set().Key(key).Value(id).Ex(duration).Build())
+	result := cache.Valkey.Do(context.Background(), cache.Valkey.B().Set().Key(key).Value(strconv.Itoa(int(appStoragePathId))).Ex(duration).Build())
 	if result.Error() != nil {
 		return "", result.Error()
 	}
@@ -32,7 +34,7 @@ func CreateHandshake(app, id string) (string, error) {
 	return code.String(), nil
 }
 
-// GetHandshake gets the id for the given app and code.
+// GetHandshake gets the appStoragePathId for the given app and code.
 func GetHandshake(app, code string) (string, error) {
 	key := handshakeCacheKey(app, code)
 

@@ -58,6 +58,10 @@ func CreateDocument(folderID uint, name, extension, mimeType string, size int) (
 		return models.Document{}, result.Error
 	}
 
+	if err := database.Pg.First(&document.Folder, folderID).Error; err != nil {
+		return models.Document{}, err
+	}
+
 	return document, nil
 }
 

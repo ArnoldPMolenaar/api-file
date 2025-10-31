@@ -6,7 +6,7 @@ import (
 )
 
 // IsFolderAvailable method to check if a folder already exists inside the same path.
-func IsFolderAvailable(appStoragePathID uint, folder string, parentFolderId ...uint) (bool, error) {
+func IsFolderAvailable(appStoragePathID uint, folder string, ignore string, parentFolderId ...uint) (bool, error) {
 	if len(parentFolderId) != 0 {
 		var folderIDs []int
 		if result := database.Pg.Model(&models.FolderFolder{}).
@@ -17,7 +17,7 @@ func IsFolderAvailable(appStoragePathID uint, folder string, parentFolderId ...u
 			return false, nil
 		}
 
-		result := database.Pg.Unscoped().Limit(1).Find(&models.Folder{}, "name = ? AND id IN (?)", folder, folderIDs)
+		result := database.Pg.Unscoped().Limit(1).Find(&models.Folder{}, "name = ? AND name != ? id IN (?)", folder, ignore, folderIDs)
 		if result.Error != nil {
 			return false, result.Error
 		} else {
@@ -29,7 +29,7 @@ func IsFolderAvailable(appStoragePathID uint, folder string, parentFolderId ...u
 		Unscoped().
 		Select("folders.id").
 		Joins("LEFT JOIN folder_folders ON folders.id = folder_folders.folder_id").
-		Where("folders.app_storage_path_id = ? AND folders.name = ? AND folder_folders.folder_id IS NULL", appStoragePathID, folder).
+		Where("folders.app_storage_path_id = ? AND folders.name = ? AND folders.name != ? AND folder_folders.folder_id IS NULL", appStoragePathID, folder, ignore).
 		Limit(1).
 		Find(&models.Folder{}); result.Error != nil {
 		return false, result.Error

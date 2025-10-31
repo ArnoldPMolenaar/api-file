@@ -6,6 +6,7 @@ import (
 	"api-file/main/src/errors"
 	"api-file/main/src/models"
 	"api-file/main/src/services"
+
 	errorutil "github.com/ArnoldPMolenaar/api-utils/errors"
 	"github.com/ArnoldPMolenaar/api-utils/utils"
 	"github.com/gofiber/fiber/v2"
@@ -53,9 +54,9 @@ func CreateFolder(c *fiber.Ctx) error {
 	// Check if the folder is available.
 	available := false
 	if request.ParentFolderID != nil {
-		available, err = services.IsFolderAvailable(request.AppStoragePathID, request.Name, *request.ParentFolderID)
+		available, err = services.IsFolderAvailable(request.AppStoragePathID, request.Name, "", *request.ParentFolderID)
 	} else {
-		available, err = services.IsFolderAvailable(request.AppStoragePathID, request.Name)
+		available, err = services.IsFolderAvailable(request.AppStoragePathID, request.Name, "")
 	}
 	if err != nil {
 		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
@@ -112,9 +113,9 @@ func UpdateFolder(c *fiber.Ctx) error {
 	// Check if the folder is available.
 	available := false
 	if request.ParentFolderID != nil {
-		available, err = services.IsFolderAvailable(request.AppStoragePathID, request.Name, *request.ParentFolderID)
+		available, err = services.IsFolderAvailable(request.AppStoragePathID, request.Name, folder.Name, *request.ParentFolderID)
 	} else {
-		available, err = services.IsFolderAvailable(request.AppStoragePathID, request.Name)
+		available, err = services.IsFolderAvailable(request.AppStoragePathID, request.Name, folder.Name)
 	}
 	if err != nil {
 		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())

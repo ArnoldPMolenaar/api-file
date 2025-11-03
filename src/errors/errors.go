@@ -7,6 +7,7 @@ const (
 	StoragePathAvailable = "storagePathAvailable"
 	StoragePathFull      = "storagePathFull"
 	FolderExists         = "folderExists"
+	FolderImmutable      = "folderImmutable"
 	ImageExists          = "imageExists"
 	ImageTypeInvalid     = "imageTypeInvalid"
 	ParseBase64          = "parseBase64"

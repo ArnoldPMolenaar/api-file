@@ -9,5 +9,6 @@ type UpdateFolder struct {
 	Name             string `json:"name" validate:"required"`
 	// TODO: Add color validation.
 	Color     string    `json:"color"`
+	Immutable bool      `json:"immutable"`
 	UpdatedAt time.Time `json:"updatedAt" validate:"required"`
 }

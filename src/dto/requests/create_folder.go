@@ -6,5 +6,6 @@ type CreateFolder struct {
 	ParentFolderID   *uint  `json:"parentFolderId"`
 	Name             string `json:"name" validate:"required"`
 	// TODO: Add color validation.
-	Color string `json:"color"`
+	Color     string `json:"color"`
+	Immutable bool   `json:"immutable"`
 }

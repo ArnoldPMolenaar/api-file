@@ -10,6 +10,7 @@ type Folder struct {
 	AppStoragePathID uint      `json:"appStoragePathId"`
 	Name             string    `json:"name"`
 	Color            string    `json:"color"`
+	Immutable        bool      `json:"immutable"`
 	CreatedAt        time.Time `json:"createdAt"`
 	UpdatedAt        time.Time `json:"updatedAt"`
 }
@@ -20,6 +21,7 @@ func (f *Folder) SetFolder(folder *models.Folder) {
 	f.AppStoragePathID = folder.AppStoragePathID
 	f.Name = folder.Name
 	f.Color = folder.Color
+	f.Immutable = folder.Immutable
 	f.CreatedAt = folder.CreatedAt
 	f.UpdatedAt = folder.UpdatedAt
 }

@@ -109,8 +109,8 @@ func GetFolder(id uint, preload ...bool) (folder *models.Folder, folders []*mode
 }
 
 // CreateFolder method to create a folder.
-func CreateFolder(appStoragePathID uint, name, color string, parentFolderID ...uint) (*models.Folder, error) {
-	folder := &models.Folder{AppStoragePathID: appStoragePathID, Name: name, Color: color}
+func CreateFolder(appStoragePathID uint, name, color string, immutable bool, parentFolderID ...uint) (*models.Folder, error) {
+	folder := &models.Folder{AppStoragePathID: appStoragePathID, Name: name, Color: color, Immutable: immutable}
 
 	if result := database.Pg.Create(folder); result.Error != nil {
 		return nil, result.Error
@@ -127,9 +127,10 @@ func CreateFolder(appStoragePathID uint, name, color string, parentFolderID ...u
 }
 
 // UpdateFolder method to update a folder.
-func UpdateFolder(oldFolder *models.Folder, name, color string) (*models.Folder, error) {
+func UpdateFolder(oldFolder *models.Folder, name, color string, immutable bool) (*models.Folder, error) {
 	oldFolder.Name = name
 	oldFolder.Color = color
+	oldFolder.Immutable = immutable
 
 	if result := database.Pg.Save(oldFolder); result.Error != nil {
 		return nil, result.Error

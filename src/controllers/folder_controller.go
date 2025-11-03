@@ -67,9 +67,9 @@ func CreateFolder(c *fiber.Ctx) error {
 	// Create the folder.
 	var folder *models.Folder
 	if request.ParentFolderID != nil {
-		folder, err = services.CreateFolder(request.AppStoragePathID, request.Name, request.Color, *request.ParentFolderID)
+		folder, err = services.CreateFolder(request.AppStoragePathID, request.Name, request.Color, request.Immutable, *request.ParentFolderID)
 	} else {
-		folder, err = services.CreateFolder(request.AppStoragePathID, request.Name, request.Color)
+		folder, err = services.CreateFolder(request.AppStoragePathID, request.Name, request.Color, request.Immutable)
 	}
 	if err != nil {
 		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
@@ -128,8 +128,12 @@ func UpdateFolder(c *fiber.Ctx) error {
 		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.OutOfSync, "Data is out of sync.")
 	}
 
+	if folder.Immutable {
+		request.Name = folder.Name
+	}
+
 	// Update the folder.
-	if folder, err = services.UpdateFolder(folder, request.Name, request.Color); err != nil {
+	if folder, err = services.UpdateFolder(folder, request.Name, request.Color, request.Immutable); err != nil {
 		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
 	}
 
@@ -154,6 +158,10 @@ func DeleteFolder(c *fiber.Ctx) error {
 		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
 	} else if folder == nil || folder.ID == 0 {
 		return errorutil.Response(c, fiber.StatusNotFound, errors.FolderExists, "Folder does not exist.")
+	}
+
+	if folder.Immutable {
+		return errorutil.Response(c, fiber.StatusBadRequest, errors.FolderImmutable, "Folder is immutable and cannot be deleted.")
 	}
 
 	// Delete the folder.

@@ -7,6 +7,7 @@ type Folder struct {
 	AppStoragePathID uint   `gorm:"not null"`
 	Name             string `gorm:"not null"`
 	Color            string `gorm:"not null"`
+	Immutable        bool   `gorm:"default:false;not null"`
 
 	// Relationships.
 	AppStoragePath AppStoragePath `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:AppStoragePathID;references:ID"`

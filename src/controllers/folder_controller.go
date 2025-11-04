@@ -6,6 +6,8 @@ import (
 	"api-file/main/src/errors"
 	"api-file/main/src/models"
 	"api-file/main/src/services"
+	"os"
+	"strings"
 
 	errorutil "github.com/ArnoldPMolenaar/api-utils/errors"
 	"github.com/ArnoldPMolenaar/api-utils/utils"
@@ -132,8 +134,46 @@ func UpdateFolder(c *fiber.Ctx) error {
 		request.Name = folder.Name
 	}
 
-	// Update the folder.
+	var oldPath, newPath string
+	var renamed bool
+	if request.Name != folder.Name {
+		// Load storage path to construct full folder path.
+		storagePath, err := services.GetStoragePath(folder.AppStoragePathID)
+		if err != nil {
+			return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
+		}
+
+		oldPathWithSlash, err := services.GetPath(storagePath, folder.ID)
+		if err != nil {
+			return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
+		}
+
+		// Ensure trailing slash exists per GetPath contract; derive new path.
+		oldPathWithSlash = strings.TrimSuffix(oldPathWithSlash, "") // no-op for clarity
+		oldPath = strings.TrimSuffix(oldPathWithSlash, "/")
+
+		// Parent path is oldPath minus the folder name.
+		parentPath := strings.TrimSuffix(oldPath, folder.Name)
+		if !strings.HasSuffix(parentPath, "/") {
+			parentPath += "/"
+		}
+		newPath = parentPath + request.Name
+
+		// Check if directory exists before renaming.
+		if info, statErr := os.Stat(oldPath); statErr == nil && info.IsDir() {
+			// Perform rename.
+			if renameErr := os.Rename(oldPath, newPath); renameErr != nil {
+				return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.InternalServerError, renameErr.Error())
+			}
+			renamed = true
+		}
+	}
+
+	// Update the folder (no physical rename needed or folder not found on disk).
 	if folder, err = services.UpdateFolder(folder, request.Name, request.Color, request.Immutable); err != nil {
+		if renamed {
+			_ = os.Rename(newPath, oldPath) // best-effort revert
+		}
 		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
 	}
 

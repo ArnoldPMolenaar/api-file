@@ -17,7 +17,7 @@ func IsFolderAvailable(appStoragePathID uint, folder string, ignore string, pare
 			return false, nil
 		}
 
-		result := database.Pg.Unscoped().Limit(1).Find(&models.Folder{}, "name = ? AND name != ? id IN (?)", folder, ignore, folderIDs)
+		result := database.Pg.Unscoped().Limit(1).Find(&models.Folder{}, "name = ? AND name != ? AND id IN (?)", folder, ignore, folderIDs)
 		if result.Error != nil {
 			return false, result.Error
 		} else {

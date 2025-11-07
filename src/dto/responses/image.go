@@ -21,10 +21,9 @@ type Image struct {
 }
 
 // SetImage method to set an image.
-func (i *Image) SetImage(image *models.Image) {
+func (i *Image) SetImage(image *models.Image, appStoragePathID *uint) {
 	i.ID = image.ID
 	i.FolderID = image.FolderID
-	i.AppStoragePathID = image.Folder.AppStoragePathID
 	i.Name = image.Name
 	i.Extension = image.Extension
 	i.Size = image.Size
@@ -33,6 +32,12 @@ func (i *Image) SetImage(image *models.Image) {
 	i.CreatedAt = image.CreatedAt
 	i.UpdatedAt = image.UpdatedAt
 	i.ImageSizes = []ImageSize{}
+
+	if appStoragePathID != nil {
+		i.AppStoragePathID = *appStoragePathID
+	} else {
+		i.AppStoragePathID = image.Folder.AppStoragePathID
+	}
 
 	if image.Description.Valid {
 		i.Description = &image.Description.String

@@ -9,10 +9,11 @@ import (
 	"api-file/main/src/services"
 	upload "api-file/main/src/utils"
 	"fmt"
+	"os"
+
 	errorutil "github.com/ArnoldPMolenaar/api-utils/errors"
 	"github.com/ArnoldPMolenaar/api-utils/utils"
 	"github.com/gofiber/fiber/v2"
-	"os"
 )
 
 // GetDocument method to get a document by its ID.
@@ -33,7 +34,7 @@ func GetDocument(c *fiber.Ctx) error {
 
 	// Return the document.
 	response := responses.Document{}
-	response.SetDocument(&document)
+	response.SetDocument(&document, nil)
 
 	return c.JSON(response)
 }
@@ -136,7 +137,7 @@ func CreateDocument(c *fiber.Ctx) error {
 
 	// Return the document.
 	response := responses.Document{}
-	response.SetDocument(&document)
+	response.SetDocument(&document, &storagePath.ID)
 
 	return c.JSON(response)
 }
@@ -214,7 +215,7 @@ func UpdateDocument(c *fiber.Ctx) error {
 
 	// Return the document.
 	response := responses.Document{}
-	response.SetDocument(&document)
+	response.SetDocument(&document, nil)
 
 	return c.JSON(response)
 }

@@ -9,11 +9,12 @@ import (
 	"api-file/main/src/services"
 	upload "api-file/main/src/utils"
 	"fmt"
+	"os"
+
 	errorutil "github.com/ArnoldPMolenaar/api-utils/errors"
 	"github.com/ArnoldPMolenaar/api-utils/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/h2non/bimg"
-	"os"
 )
 
 // GetImage method to get the image by ID.
@@ -34,7 +35,7 @@ func GetImage(c *fiber.Ctx) error {
 
 	// Return the image.
 	response := responses.Image{}
-	response.SetImage(&image)
+	response.SetImage(&image, nil)
 
 	return c.JSON(response)
 }
@@ -192,7 +193,7 @@ func CreateImage(c *fiber.Ctx) error {
 
 	// Return the image.
 	response := responses.Image{}
-	response.SetImage(&image)
+	response.SetImage(&image, &storagePath.ID)
 
 	return c.JSON(response)
 }
@@ -300,7 +301,7 @@ func UpdateImage(c *fiber.Ctx) error {
 
 	// Return the image.
 	response := responses.Image{}
-	response.SetImage(&image)
+	response.SetImage(&image, nil)
 
 	return c.JSON(response)
 }

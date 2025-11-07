@@ -17,13 +17,18 @@ type Document struct {
 }
 
 // SetDocument sets the document properties.
-func (d *Document) SetDocument(document *models.Document) {
+func (d *Document) SetDocument(document *models.Document, appStoragePathID *uint) {
 	d.ID = document.ID
 	d.FolderID = document.FolderID
-	d.AppStoragePathID = document.Folder.AppStoragePathID
 	d.Name = document.Name
 	d.Extension = document.Extension
 	d.Size = document.Size
 	d.CreatedAt = document.CreatedAt
 	d.UpdatedAt = document.UpdatedAt
+
+	if appStoragePathID != nil {
+		d.AppStoragePathID = *appStoragePathID
+	} else {
+		d.AppStoragePathID = document.Folder.AppStoragePathID
+	}
 }

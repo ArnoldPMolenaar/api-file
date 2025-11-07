@@ -36,12 +36,12 @@ func (f *FolderPreload) SetFolderPreload(folder *models.Folder, folders []*model
 	f.Images = make([]Image, len(folder.Images))
 	for i := range folder.Images {
 		f.Images[i] = Image{}
-		f.Images[i].SetImage(&folder.Images[i])
+		f.Images[i].SetImage(&folder.Images[i], &folder.AppStoragePathID)
 	}
 
 	f.Documents = make([]Document, len(folder.Documents))
 	for i := range folder.Documents {
 		f.Documents[i] = Document{}
-		f.Documents[i].SetDocument(&folder.Documents[i])
+		f.Documents[i].SetDocument(&folder.Documents[i], &folder.AppStoragePathID)
 	}
 }

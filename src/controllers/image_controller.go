@@ -76,7 +76,6 @@ func GetImageFile(c *fiber.Ctx) error {
 
 // GetImageFileSize method to get the image file by ID.
 func GetImageFileSize(c *fiber.Ctx) error {
-	// Get the ID and size from the URL.
 	size := enums.Size(c.Params("size"))
 	id, err := utils.StringToUint(c.Params("id"))
 	if err != nil {
@@ -84,9 +83,7 @@ func GetImageFileSize(c *fiber.Ctx) error {
 	}
 
 	// Try to get image from cache.
-	var filePath string
-	filePath, err = services.GetImageFromCache(id, size.String())
-
+	filePath, err := services.GetImageFromCache(id, size.String())
 	if filePath == "" || err != nil {
 		// Get the image size.
 		imageSize, err := services.GetImageSizeById(id, size)
@@ -101,7 +98,8 @@ func GetImageFileSize(c *fiber.Ctx) error {
 		if err != nil {
 			return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err)
 		}
-		filePath := fmt.Sprintf("%s%s-%s.webp", path, imageSize.Image.Name, size)
+
+		filePath = fmt.Sprintf("%s%s-%s.webp", path, imageSize.Image.Name, size)
 		_ = services.SaveImageToCache(imageSize.Image.ID, filePath, size.String())
 	}
 

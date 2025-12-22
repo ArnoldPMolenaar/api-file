@@ -108,6 +108,23 @@ func GetFolder(id uint, preload ...bool) (folder *models.Folder, folders []*mode
 	return folder, folders, nil
 }
 
+// GetFolderByName method to get a folder by name.
+func GetFolderByName(appStoragePathID uint, name string, root ...bool) (*models.Folder, error) {
+	folder := &models.Folder{}
+	query := database.Pg.Model(folder)
+
+	if len(root) > 0 && root[0] {
+		query = query.Joins("LEFT JOIN folder_folders ON folders.id = folder_folders.folder_id").
+			Where("folder_folders.folder_id IS NULL")
+	}
+
+	if result := query.Find(folder, "folders.app_storage_path_id = ? AND name = ?", appStoragePathID, name); result.Error != nil {
+		return nil, result.Error
+	}
+
+	return folder, nil
+}
+
 // CreateFolder method to create a folder.
 func CreateFolder(appStoragePathID uint, name, color string, immutable bool, parentFolderID ...uint) (*models.Folder, error) {
 	folder := &models.Folder{AppStoragePathID: appStoragePathID, Name: name, Color: color, Immutable: immutable}

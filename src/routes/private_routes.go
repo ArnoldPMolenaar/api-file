@@ -26,6 +26,7 @@ func PrivateRoutes(a *fiber.App) {
 	// Register CRUD routes for /v1/folders.
 	folders := route.Group("/folders", middleware.MachineProtected())
 	folders.Post("/", controllers.CreateFolder)
+	folders.Get("/name", controllers.GetFolderByName)
 	folders.Get("/:id", controllers.GetFolder)
 	folders.Put("/:id", controllers.UpdateFolder)
 	folders.Delete("/:id", controllers.DeleteFolder)

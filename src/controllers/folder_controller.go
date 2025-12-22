@@ -37,6 +37,43 @@ func GetFolder(c *fiber.Ctx) error {
 	return c.JSON(response)
 }
 
+// GetFolderByName func to get a folder by name.
+func GetFolderByName(c *fiber.Ctx) error {
+	// Get the name from the URL.
+	name := c.Query("name")
+	if name == "" {
+		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.InvalidParam, "name parameter is required.")
+	}
+
+	// Get the app storage path ID from the URL.
+	appStoragePathIDParam := c.Query("appStoragePathId")
+	if appStoragePathIDParam == "" {
+		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.InvalidParam, "appStoragePathID parameter is required.")
+	}
+	appStoragePathID, err := utils.StringToUint(appStoragePathIDParam)
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.InvalidParam, err.Error())
+	}
+
+	// Get the root flag from the URL.
+	root := c.Query("root")
+	isRoot := root == "true" || root == "1"
+
+	// Find the folder.
+	folder, err := services.GetFolderByName(appStoragePathID, name, isRoot)
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
+	} else if folder == nil || folder.ID == 0 {
+		return errorutil.Response(c, fiber.StatusNotFound, errors.FolderExists, "Folder does not exist.")
+	}
+
+	// Return the storage path.
+	response := responses.Folder{}
+	response.SetFolder(folder)
+
+	return c.JSON(response)
+}
+
 // CreateFolder func to create a folder.
 func CreateFolder(c *fiber.Ctx) error {
 	var err error

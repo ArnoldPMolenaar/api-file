@@ -17,7 +17,7 @@ args_bin = []
 # Watch these filename extensions.
 include_ext = ["go", "tpl", "tmpl", "html"]
 # Ignore these filename extensions or directories.
-exclude_dir = ["docker"]
+exclude_dir = ["docker", "files"]
 # Watch these directories if you specified.
 include_dir = []
 # Exclude files.

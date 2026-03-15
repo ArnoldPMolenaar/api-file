@@ -458,15 +458,22 @@ func convertAndUploadImages(appStoragePath *models.AppStoragePath, folderID uint
 		}
 	}
 
+	if amountOfImagesToCreate == 0 {
+		fileProgress.Progress = 100
+		BroadcastProgress(fileProgress)
+
+		return imageSizes, nil
+	}
+
 	calculatedProgress := (100.0 - progress) / float64(amountOfImagesToCreate)
 	var currentImage int8
 	for size, width := range sizes {
-		currentImage++
-		filenameSize := fmt.Sprintf("%s-%s.webp", filename, size)
-
 		if originalSize.Width <= width {
 			continue
 		}
+
+		currentImage++
+		filenameSize := fmt.Sprintf("%s-%s.webp", filename, size)
 
 		newHeight := originalSize.Height * width / originalSize.Width
 		resized, err := bimg.NewImage(data).Resize(width, newHeight)

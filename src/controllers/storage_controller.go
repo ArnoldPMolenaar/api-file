@@ -1,63 +1,39 @@
 package controllers
 
 import (
-	"api-file/main/src/database"
 	"api-file/main/src/dto/requests"
 	"api-file/main/src/dto/responses"
 	"api-file/main/src/errors"
-	"api-file/main/src/models"
 	"api-file/main/src/services"
+	"strconv"
 
 	errorutil "github.com/ArnoldPMolenaar/api-utils/errors"
-	"github.com/ArnoldPMolenaar/api-utils/pagination"
 	"github.com/ArnoldPMolenaar/api-utils/utils"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // GetStoragePaths func to get all storage paths for the app.
-func GetStoragePaths(c *fiber.Ctx) error {
-	storagePaths := make([]models.AppStoragePath, 0)
+func GetStoragePaths(c fiber.Ctx) error {
 	values := c.Request().URI().QueryArgs()
-	allowedColumns := map[string]bool{
-		"id":    true,
-		"app":   true,
-		"path":  true,
-		"limit": true,
-	}
-
-	queryFunc := pagination.Query(values, allowedColumns)
-	sortFunc := pagination.Sort(values, allowedColumns)
-	page := c.QueryInt("page", 1)
+	page, _ := strconv.Atoi(c.Query("page", "1"))
 	if page < 1 {
 		page = 1
 	}
-	limit := c.QueryInt("limit", 10)
+	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	if limit < 1 {
 		limit = 10
 	}
-	offset := pagination.Offset(page, limit)
 
-	db := database.Pg.Scopes(queryFunc, sortFunc).
-		Limit(limit).
-		Offset(offset).
-		Find(&storagePaths)
-	if db.Error != nil {
-		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, db.Error.Error())
+	paginationModel, err := services.GetStoragePaths(values, page, limit)
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err.Error())
 	}
-
-	total := int64(0)
-	database.Pg.Scopes(queryFunc).
-		Model(&models.AppStoragePath{}).
-		Count(&total)
-	pageCount := pagination.Count(int(total), limit)
-
-	paginationModel := pagination.CreatePaginationModel(limit, page, pageCount, int(total), toStoragePathPagination(storagePaths))
 
 	return c.Status(fiber.StatusOK).JSON(paginationModel)
 }
 
 // GetStoragePath func to get a storage path for the app.
-func GetStoragePath(c *fiber.Ctx) error {
+func GetStoragePath(c fiber.Ctx) error {
 	// Get the ID from the URL.
 	id, err := utils.StringToUint(c.Params("id"))
 	if err != nil {
@@ -86,7 +62,7 @@ func GetStoragePath(c *fiber.Ctx) error {
 }
 
 // GetStoragePathIDByApp func to get the storage path ID by app name.
-func GetStoragePathIDByApp(c *fiber.Ctx) error {
+func GetStoragePathIDByApp(c fiber.Ctx) error {
 	// Get the app name from the query.
 	app := c.Query("app", "")
 	if app == "" {
@@ -114,10 +90,10 @@ func GetStoragePathIDByApp(c *fiber.Ctx) error {
 }
 
 // CreateStoragePath func to create a storage path for the app.
-func CreateStoragePath(c *fiber.Ctx) error {
+func CreateStoragePath(c fiber.Ctx) error {
 	// Parse the request.
 	request := requests.CreateAppStoragePath{}
-	if err := c.BodyParser(&request); err != nil {
+	if err := c.Bind().Body(&request); err != nil {
 		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.BodyParse, err.Error())
 	}
 
@@ -155,7 +131,7 @@ func CreateStoragePath(c *fiber.Ctx) error {
 }
 
 // UpdateStoragePath func to update a storage path for the app.
-func UpdateStoragePath(c *fiber.Ctx) error {
+func UpdateStoragePath(c fiber.Ctx) error {
 	// Get the ID from the URL.
 	id, err := utils.StringToUint(c.Params("id"))
 	if err != nil {
@@ -164,7 +140,7 @@ func UpdateStoragePath(c *fiber.Ctx) error {
 
 	// Parse the request.
 	request := requests.UpdateAppStoragePath{}
-	if err := c.BodyParser(&request); err != nil {
+	if err := c.Bind().Body(&request); err != nil {
 		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.BodyParse, err.Error())
 	}
 
@@ -215,17 +191,4 @@ func UpdateStoragePath(c *fiber.Ctx) error {
 	response.SetAppStoragePath(storagePath, usedSpace)
 
 	return c.JSON(response)
-}
-
-// toStoragePathPagination func to convert the storage paths to a response struct.
-func toStoragePathPagination(storagePaths []models.AppStoragePath) []responses.AppStoragePathPaginate {
-	result := make([]responses.AppStoragePathPaginate, len(storagePaths))
-
-	for i := range storagePaths {
-		response := responses.AppStoragePathPaginate{}
-		response.SetAppStoragePathPaginate(&storagePaths[i])
-		result[i] = response
-	}
-
-	return result
 }

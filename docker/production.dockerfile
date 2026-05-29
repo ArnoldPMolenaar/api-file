@@ -1,4 +1,4 @@
-FROM golang:1.23-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 LABEL authors="Arnold Molenaar <arnold.molenaar@webmi.nl> (https://arnoldmolenaar.nl/)"
 
@@ -18,7 +18,7 @@ COPY . .
 
 # Set necessary environment variables needed for our image and build the API.
 ENV GOOS=linux GOARCH=amd64
-RUN go build -a -installsuffix cgo -ldflags="-s -w" -o api .
+RUN go build -a -installsuffix cgo -ldflags="-s -w -X main.version=$(cat VERSION)" -o api .
 
 # Use a minimal runtime image
 FROM alpine:latest

@@ -13,11 +13,11 @@ import (
 
 	errorutil "github.com/ArnoldPMolenaar/api-utils/errors"
 	"github.com/ArnoldPMolenaar/api-utils/utils"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // GetDocument method to get a document by its ID.
-func GetDocument(c *fiber.Ctx) error {
+func GetDocument(c fiber.Ctx) error {
 	// Get the ID from the URL.
 	id, err := utils.StringToUint(c.Params("id"))
 	if err != nil {
@@ -40,7 +40,7 @@ func GetDocument(c *fiber.Ctx) error {
 }
 
 // GetDocumentFile method to get the document file by ID.
-func GetDocumentFile(c *fiber.Ctx) error {
+func GetDocumentFile(c fiber.Ctx) error {
 	// Get the ID from the URL.
 	id, err := utils.StringToUint(c.Params("id"))
 	if err != nil {
@@ -66,11 +66,11 @@ func GetDocumentFile(c *fiber.Ctx) error {
 	return c.SendFile(filePath)
 }
 
-// CreateDocument method to create an document.
-func CreateDocument(c *fiber.Ctx) error {
+// CreateDocument method to create a document.
+func CreateDocument(c fiber.Ctx) error {
 	// Parse the request.
 	request := requests.CreateDocument{}
-	if err := c.BodyParser(&request); err != nil {
+	if err := c.Bind().Body(&request); err != nil {
 		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.BodyParse, err.Error())
 	}
 
@@ -143,7 +143,7 @@ func CreateDocument(c *fiber.Ctx) error {
 }
 
 // UpdateDocument method to update a document.
-func UpdateDocument(c *fiber.Ctx) error {
+func UpdateDocument(c fiber.Ctx) error {
 	// Get the ID from the URL.
 	id, err := utils.StringToUint(c.Params("id"))
 	if err != nil {
@@ -152,7 +152,7 @@ func UpdateDocument(c *fiber.Ctx) error {
 
 	// Parse the request.
 	request := requests.UpdateDocument{}
-	if err := c.BodyParser(&request); err != nil {
+	if err := c.Bind().Body(&request); err != nil {
 		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.BodyParse, err.Error())
 	}
 
@@ -220,8 +220,8 @@ func UpdateDocument(c *fiber.Ctx) error {
 	return c.JSON(response)
 }
 
-// DeleteDocument func to delete an document.
-func DeleteDocument(c *fiber.Ctx) error {
+// DeleteDocument func to delete a document.
+func DeleteDocument(c fiber.Ctx) error {
 	// Get the ID from the URL.
 	id, err := utils.StringToUint(c.Params("id"))
 	if err != nil {
@@ -244,8 +244,8 @@ func DeleteDocument(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-// DeleteDocument func to delete an document.
-func DeleteDocumentHard(c *fiber.Ctx) error {
+// DeleteDocumentHard func to delete a document.
+func DeleteDocumentHard(c fiber.Ctx) error {
 	// Get the ID from the URL.
 	id, err := utils.StringToUint(c.Params("id"))
 	if err != nil {
@@ -274,7 +274,7 @@ func DeleteDocumentHard(c *fiber.Ctx) error {
 }
 
 // RestoreDocument func to restore a document.
-func RestoreDocument(c *fiber.Ctx) error {
+func RestoreDocument(c fiber.Ctx) error {
 	// Get the ID from the URL.
 	id, err := utils.StringToUint(c.Params("id"))
 	if err != nil {

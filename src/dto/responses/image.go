@@ -3,6 +3,8 @@ package responses
 import (
 	"api-file/main/src/models"
 	"time"
+
+	"github.com/ArnoldPMolenaar/api-utils/utils"
 )
 
 type Image struct {
@@ -29,6 +31,7 @@ func (i *Image) SetImage(image *models.Image, appStoragePathID *uint) {
 	i.Size = image.Size
 	i.Width = image.Width
 	i.Height = image.Height
+	i.Description = utils.PtrFromNullString(image.Description)
 	i.CreatedAt = image.CreatedAt
 	i.UpdatedAt = image.UpdatedAt
 	i.ImageSizes = []ImageSize{}
@@ -37,10 +40,6 @@ func (i *Image) SetImage(image *models.Image, appStoragePathID *uint) {
 		i.AppStoragePathID = *appStoragePathID
 	} else {
 		i.AppStoragePathID = image.Folder.AppStoragePathID
-	}
-
-	if image.Description.Valid {
-		i.Description = &image.Description.String
 	}
 
 	for index := range image.ImageSizes {

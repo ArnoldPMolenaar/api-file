@@ -1,14 +1,33 @@
 package middleware
 
 import (
-	"github.com/gofiber/contrib/websocket"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/fiber/v2/middleware/recover"
 	"os"
 	"strings"
+
+	"github.com/gofiber/contrib/v3/websocket"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/cors"
+	"github.com/gofiber/fiber/v3/middleware/logger"
+	"github.com/gofiber/fiber/v3/middleware/recover"
 )
+
+func csvEnvList(key string) []string {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return []string{}
+	}
+
+	parts := strings.Split(value, ",")
+	result := make([]string, 0, len(parts))
+	for _, part := range parts {
+		trimmed := strings.TrimSpace(part)
+		if trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+
+	return result
+}
 
 // FiberMiddleware provide Fiber's built-in middlewares.
 // See: https://docs.gofiber.io/api/middleware
@@ -16,15 +35,15 @@ func FiberMiddleware(a *fiber.App) {
 	a.Use(
 		// Add CORS to each route.
 		cors.New(cors.Config{
-			AllowOrigins: os.Getenv("CORS_ALLOW_ORIGINS"),
-			AllowMethods: strings.Join([]string{
+			AllowOrigins: csvEnvList("CORS_ALLOW_ORIGINS"),
+			AllowMethods: []string{
 				fiber.MethodGet,
 				fiber.MethodPost,
-				fiber.MethodPut,
+				fiber.MethodPatch,
 				fiber.MethodHead,
 				fiber.MethodOptions,
-			}, ","),
-			AllowHeaders: "Accept,Content-Type",
+			},
+			AllowHeaders: csvEnvList("CORS_ALLOW_HEADERS"),
 		}),
 
 		// Add simple logger.
@@ -37,7 +56,7 @@ func FiberMiddleware(a *fiber.App) {
 }
 
 // WebSocketMiddleware checks if the request is a WebSocket upgrade.
-func webSocketMiddleware(c *fiber.Ctx) error {
+func webSocketMiddleware(c fiber.Ctx) error {
 	if websocket.IsWebSocketUpgrade(c) {
 		c.Locals("allowed", true)
 		return c.Next()

@@ -2,10 +2,21 @@ package services
 
 import (
 	"api-file/main/src/database"
+	"api-file/main/src/dto/responses"
 	"api-file/main/src/models"
 	"database/sql"
 	"os"
+
+	"github.com/ArnoldPMolenaar/api-utils/pagination"
+	"github.com/valyala/fasthttp"
 )
+
+var allowedStoragePathColumns = map[string]bool{
+	"id":    true,
+	"app":   true,
+	"path":  true,
+	"limit": true,
+}
 
 // IsStorageAvailable method to check if a storage path is available within the app.
 func IsStorageAvailable(app, path string) (bool, error) {
@@ -103,6 +114,34 @@ func GetStoragePath(id uint) (*models.AppStoragePath, error) {
 	return storagePath, nil
 }
 
+// GetStoragePaths method to get paginated storage paths with query/sort support.
+func GetStoragePaths(values *fasthttp.Args, page, limit int) (any, error) {
+	storagePaths := make([]models.AppStoragePath, 0)
+
+	queryFunc := pagination.Query(values, allowedStoragePathColumns)
+	sortFunc := pagination.Sort(values, allowedStoragePathColumns)
+	offset := pagination.Offset(page, limit)
+
+	if result := database.Pg.Scopes(queryFunc, sortFunc).
+		Limit(limit).
+		Offset(offset).
+		Find(&storagePaths); result.Error != nil {
+		return nil, result.Error
+	}
+
+	total := int64(0)
+	if result := database.Pg.Scopes(queryFunc).
+		Model(&models.AppStoragePath{}).
+		Count(&total); result.Error != nil {
+		return nil, result.Error
+	}
+
+	pageCount := pagination.Count(int(total), limit)
+	paginationModel := pagination.CreatePaginationModel(limit, page, pageCount, int(total), toStoragePathPagination(storagePaths))
+
+	return paginationModel, nil
+}
+
 // CreateStoragePath method to create a storage path for the app.
 func CreateStoragePath(app, path string, limit *int64) (*models.AppStoragePath, error) {
 	nullableLimit := sql.NullInt64{}
@@ -139,4 +178,17 @@ func UpdateStoragePath(oldStoragePath *models.AppStoragePath, app, path string, 
 	}
 
 	return oldStoragePath, nil
+}
+
+// toStoragePathPagination converts storage path models to API response objects.
+func toStoragePathPagination(storagePaths []models.AppStoragePath) []responses.AppStoragePathPaginate {
+	result := make([]responses.AppStoragePathPaginate, len(storagePaths))
+
+	for i := range storagePaths {
+		response := responses.AppStoragePathPaginate{}
+		response.SetAppStoragePathPaginate(&storagePaths[i])
+		result[i] = response
+	}
+
+	return result
 }

@@ -9,8 +9,8 @@ import (
 	"strconv"
 
 	errorutil "github.com/ArnoldPMolenaar/api-utils/errors"
-	"github.com/gofiber/contrib/websocket"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/contrib/v3/websocket"
+	"github.com/gofiber/fiber/v3"
 )
 
 // ProgressConnections is a map of WebSocket connections from clients.
@@ -65,7 +65,7 @@ func BroadcastProgress(data *responses.FileProgress) {
 }
 
 // Handshake is a WebSocket handler that creates a unique code for the handshake.
-func Handshake(c *fiber.Ctx) error {
+func Handshake(c fiber.Ctx) error {
 	// Get the ID from the URL.
 	appStoragePathIdParam := c.Query("id")
 	app := c.Query("app")

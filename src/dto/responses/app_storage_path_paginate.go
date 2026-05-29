@@ -1,6 +1,10 @@
 package responses
 
-import "api-file/main/src/models"
+import (
+	"api-file/main/src/models"
+
+	"github.com/ArnoldPMolenaar/api-utils/utils"
+)
 
 // AppStoragePathPaginate struct for the AppStoragePath response.
 type AppStoragePathPaginate struct {
@@ -15,8 +19,5 @@ func (response *AppStoragePathPaginate) SetAppStoragePathPaginate(appStoragePath
 	response.ID = appStoragePath.ID
 	response.AppName = appStoragePath.AppName
 	response.Path = appStoragePath.Path
-
-	if appStoragePath.Limit.Valid {
-		response.Limit = &appStoragePath.Limit.Int64
-	}
+	response.Limit = utils.PtrFromNullInt64(appStoragePath.Limit)
 }

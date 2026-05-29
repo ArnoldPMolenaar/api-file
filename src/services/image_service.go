@@ -24,7 +24,7 @@ func IsImageAvailable(folderId uint, name, extension string) (bool, error) {
 	}
 }
 
-// IsImageDeleted method to check if a image is deleted.
+// IsImageDeleted method to check if an image is deleted.
 func IsImageDeleted(id uint) (bool, error) {
 	var count int64
 	if result := database.Pg.Model(&models.Image{}).
@@ -188,7 +188,7 @@ func UpdateImage(image *models.Image, name, extension, mimeType *string, size, w
 func DeleteImage(image *models.Image, hard ...bool) error {
 	query1 := database.Pg
 	query2 := database.Pg.Model(&models.ImageSize{})
-	if len(hard) > 0 && hard[0] == true {
+	if len(hard) > 0 && hard[0] {
 		query1 = query1.Unscoped()
 		query2 = query2.Unscoped()
 	}

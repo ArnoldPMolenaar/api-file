@@ -11,11 +11,11 @@ import (
 
 	errorutil "github.com/ArnoldPMolenaar/api-utils/errors"
 	"github.com/ArnoldPMolenaar/api-utils/utils"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // GetFolder func to get a folder.
-func GetFolder(c *fiber.Ctx) error {
+func GetFolder(c fiber.Ctx) error {
 	// Get the ID from the URL.
 	id, err := utils.StringToUint(c.Params("id"))
 	if err != nil {
@@ -38,7 +38,7 @@ func GetFolder(c *fiber.Ctx) error {
 }
 
 // GetFolderByName func to get a folder by name.
-func GetFolderByName(c *fiber.Ctx) error {
+func GetFolderByName(c fiber.Ctx) error {
 	// Get the name from the URL.
 	name := c.Query("name")
 	if name == "" {
@@ -75,12 +75,12 @@ func GetFolderByName(c *fiber.Ctx) error {
 }
 
 // CreateFolder func to create a folder.
-func CreateFolder(c *fiber.Ctx) error {
+func CreateFolder(c fiber.Ctx) error {
 	var err error
 
 	// Parse the request.
 	request := requests.CreateFolder{}
-	if err := c.BodyParser(&request); err != nil {
+	if err := c.Bind().Body(&request); err != nil {
 		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.BodyParse, err.Error())
 	}
 
@@ -122,7 +122,7 @@ func CreateFolder(c *fiber.Ctx) error {
 }
 
 // UpdateFolder func to update a folder.
-func UpdateFolder(c *fiber.Ctx) error {
+func UpdateFolder(c fiber.Ctx) error {
 	// Get the ID from the URL.
 	id, err := utils.StringToUint(c.Params("id"))
 	if err != nil {
@@ -131,7 +131,7 @@ func UpdateFolder(c *fiber.Ctx) error {
 
 	// Parse the request.
 	request := requests.UpdateFolder{}
-	if err := c.BodyParser(&request); err != nil {
+	if err := c.Bind().Body(&request); err != nil {
 		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.BodyParse, err.Error())
 	}
 
@@ -222,7 +222,7 @@ func UpdateFolder(c *fiber.Ctx) error {
 }
 
 // DeleteFolder func to delete a folder.
-func DeleteFolder(c *fiber.Ctx) error {
+func DeleteFolder(c fiber.Ctx) error {
 	// Get the ID from the URL.
 	id, err := utils.StringToUint(c.Params("id"))
 	if err != nil {
@@ -250,7 +250,7 @@ func DeleteFolder(c *fiber.Ctx) error {
 }
 
 // RestoreFolder func to restore a folder.
-func RestoreFolder(c *fiber.Ctx) error {
+func RestoreFolder(c fiber.Ctx) error {
 	// Get the ID from the URL.
 	id, err := utils.StringToUint(c.Params("id"))
 	if err != nil {

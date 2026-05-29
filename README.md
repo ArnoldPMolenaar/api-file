@@ -1,8 +1,8 @@
 # API-File 📂
 
-![Go](https://img.shields.io/badge/Go-1.17-blue)
-![Fiber](https://img.shields.io/badge/Fiber-2.0-green)
-![Gorm](https://img.shields.io/badge/Gorm-1.21.12-orange)
+![Go](https://img.shields.io/badge/Go-1.25.9-blue)
+![Fiber](https://img.shields.io/badge/Fiber-3.0-green)
+![Gorm](https://img.shields.io/badge/Gorm-1.31.1-orange)
 
 ## 📜 Description
 
@@ -22,29 +22,33 @@ Uploads can be recorded and tracked in real-time using the WebSocket routes prov
 - **Storage Paths**
     - `GET /v1/storage-paths/` - Get all storage paths
     - `POST /v1/storage-paths/` - Create a new storage path
+    - `GET /v1/storage-paths/id` - Get storage path ID by app name
     - `GET /v1/storage-paths/:id` - Get a specific storage path
-    - `PUT /v1/storage-paths/:id` - Update a specific storage path
+    - `PATCH /v1/storage-paths/:id` - Update a specific storage path
 
 - **Folders**
     - `POST /v1/folders/` - Create a new folder
+    - `GET /v1/folders/name` - Get a folder by name
     - `GET /v1/folders/:id` - Get a specific folder
-    - `PUT /v1/folders/:id` - Update a specific folder
+    - `PATCH /v1/folders/:id` - Update a specific folder
     - `DELETE /v1/folders/:id` - Delete a specific folder
-    - `PUT /v1/folders/:id/restore` - Restore a deleted folder
+    - `POST /v1/folders/:id/restore` - Restore a deleted folder
 
 - **Images**
     - `POST /v1/images/` - Upload a new image
     - `GET /v1/images/:id` - Get a specific image
-    - `PUT /v1/images/:id` - Update a specific image
+    - `PATCH /v1/images/:id` - Update a specific image
     - `DELETE /v1/images/:id` - Delete a specific image
-    - `PUT /v1/images/:id/restore` - Restore a deleted image
+    - `DELETE /v1/images/:id/hard` - Permanently delete a specific image
+    - `POST /v1/images/:id/restore` - Restore a deleted image
 
 - **Documents**
     - `POST /v1/documents/` - Upload a new document
     - `GET /v1/documents/:id` - Get a specific document
-    - `PUT /v1/documents/:id` - Update a specific document
+    - `PATCH /v1/documents/:id` - Update a specific document
     - `DELETE /v1/documents/:id` - Delete a specific document
-    - `PUT /v1/documents/:id/restore` - Restore a deleted document
+    - `DELETE /v1/documents/:id/hard` - Permanently delete a specific document
+    - `POST /v1/documents/:id/restore` - Restore a deleted document
 
 - **WebSocket**
     - `GET /v1/handshake` - Handshake route for WebSocket

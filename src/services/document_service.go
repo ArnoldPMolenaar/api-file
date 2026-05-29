@@ -82,7 +82,7 @@ func UpdateDocument(document *models.Document, name, extension, mimeType string,
 // DeleteDocument method to delete a document.
 func DeleteDocument(document *models.Document, hard ...bool) error {
 	query := database.Pg
-	if len(hard) > 0 && hard[0] == true {
+	if len(hard) > 0 && hard[0] {
 		query = query.Unscoped()
 	}
 

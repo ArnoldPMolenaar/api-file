@@ -2,8 +2,9 @@ package routes
 
 import (
 	"api-file/main/src/controllers"
-	"github.com/gofiber/contrib/websocket"
-	"github.com/gofiber/fiber/v2"
+
+	"github.com/gofiber/contrib/v3/websocket"
+	"github.com/gofiber/fiber/v3"
 )
 
 func WebSocketRoutes(a *fiber.App) {

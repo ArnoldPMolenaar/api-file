@@ -13,12 +13,12 @@ import (
 
 	errorutil "github.com/ArnoldPMolenaar/api-utils/errors"
 	"github.com/ArnoldPMolenaar/api-utils/utils"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/h2non/bimg"
 )
 
 // GetImage method to get the image by ID.
-func GetImage(c *fiber.Ctx) error {
+func GetImage(c fiber.Ctx) error {
 	// Get the ID from the URL.
 	id, err := utils.StringToUint(c.Params("id"))
 	if err != nil {
@@ -41,7 +41,7 @@ func GetImage(c *fiber.Ctx) error {
 }
 
 // GetImageFile method to get the image file by ID.
-func GetImageFile(c *fiber.Ctx) error {
+func GetImageFile(c fiber.Ctx) error {
 	// Get the ID and size from the URL.
 	id, err := utils.StringToUint(c.Params("id"))
 	if err != nil {
@@ -75,7 +75,7 @@ func GetImageFile(c *fiber.Ctx) error {
 }
 
 // GetImageFileSize method to get the image file by ID.
-func GetImageFileSize(c *fiber.Ctx) error {
+func GetImageFileSize(c fiber.Ctx) error {
 	size := enums.Size(c.Params("size"))
 	id, err := utils.StringToUint(c.Params("id"))
 	if err != nil {
@@ -108,10 +108,10 @@ func GetImageFileSize(c *fiber.Ctx) error {
 }
 
 // CreateImage method to create an image.
-func CreateImage(c *fiber.Ctx) error {
+func CreateImage(c fiber.Ctx) error {
 	// Parse the request.
 	request := requests.CreateImage{}
-	if err := c.BodyParser(&request); err != nil {
+	if err := c.Bind().Body(&request); err != nil {
 		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.BodyParse, err.Error())
 	}
 
@@ -197,7 +197,7 @@ func CreateImage(c *fiber.Ctx) error {
 }
 
 // UpdateImage method to update the image fields like description.
-func UpdateImage(c *fiber.Ctx) error {
+func UpdateImage(c fiber.Ctx) error {
 	// Get the ID from the URL.
 	id, err := utils.StringToUint(c.Params("id"))
 	if err != nil {
@@ -206,7 +206,7 @@ func UpdateImage(c *fiber.Ctx) error {
 
 	// Parse the request.
 	request := requests.UpdateImage{}
-	if err := c.BodyParser(&request); err != nil {
+	if err := c.Bind().Body(&request); err != nil {
 		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.BodyParse, err.Error())
 	}
 
@@ -305,7 +305,7 @@ func UpdateImage(c *fiber.Ctx) error {
 }
 
 // DeleteImage func to delete an image.
-func DeleteImage(c *fiber.Ctx) error {
+func DeleteImage(c fiber.Ctx) error {
 	// Get the ID from the URL.
 	id, err := utils.StringToUint(c.Params("id"))
 	if err != nil {
@@ -328,8 +328,8 @@ func DeleteImage(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-// DeleteImageHard func to delete an image for ever.
-func DeleteImageHard(c *fiber.Ctx) error {
+// DeleteImageHard func to delete an image forever.
+func DeleteImageHard(c fiber.Ctx) error {
 	// Get the ID from the URL.
 	id, err := utils.StringToUint(c.Params("id"))
 	if err != nil {
@@ -357,8 +357,8 @@ func DeleteImageHard(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-// RestoreImage func to restore a image.
-func RestoreImage(c *fiber.Ctx) error {
+// RestoreImage func to restore an image.
+func RestoreImage(c fiber.Ctx) error {
 	// Get the ID from the URL.
 	id, err := utils.StringToUint(c.Params("id"))
 	if err != nil {

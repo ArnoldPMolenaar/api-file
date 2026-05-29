@@ -6,7 +6,7 @@ import (
 )
 
 // IsFolderAvailable method to check if a folder already exists inside the same path.
-func IsFolderAvailable(appStoragePathID uint, folder string, ignore string, parentFolderId ...uint) (bool, error) {
+func IsFolderAvailable(appStoragePathID uint, folder, ignore string, parentFolderId ...uint) (bool, error) {
 	if len(parentFolderId) != 0 {
 		var folderIDs []int
 		if result := database.Pg.Model(&models.FolderFolder{}).

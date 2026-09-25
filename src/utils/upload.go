@@ -6,6 +6,18 @@ import (
 	"strings"
 )
 
+// imageConversionExceptions lists extensions that must retain their original bytes
+// instead of being resized and converted to WebP. Add extensions here as needed.
+var imageConversionExceptions = map[string]bool{
+	"svg": true,
+	"gif": true,
+}
+
+// IsImageConversionExcluded reports whether an extension must keep its original format.
+func IsImageConversionExcluded(extension string) bool {
+	return imageConversionExceptions[strings.ToLower(strings.TrimPrefix(extension, "."))]
+}
+
 // Base64ToBytes func for convert base64 string to bytes.
 func Base64ToBytes(value string) ([]byte, error) {
 	return base64.StdEncoding.DecodeString(value)

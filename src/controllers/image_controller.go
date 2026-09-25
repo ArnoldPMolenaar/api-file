@@ -10,6 +10,7 @@ import (
 	upload "api-file/main/src/utils"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	errorutil "github.com/ArnoldPMolenaar/api-utils/errors"
 	"github.com/ArnoldPMolenaar/api-utils/utils"
@@ -82,26 +83,50 @@ func GetImageFileSize(c fiber.Ctx) error {
 		return errorutil.Response(c, fiber.StatusBadRequest, errorutil.InvalidParam, err.Error())
 	}
 
-	// Try to get image from cache.
+	// Keep cached size requests on the fast path without querying the database.
 	filePath, err := services.GetImageFromCache(id, size.String())
-	if filePath == "" || err != nil {
-		// Get the image size.
-		imageSize, err := services.GetImageSizeById(id, size)
+	if err == nil && filePath != "" {
+		return c.SendFile(filePath)
+	}
+
+	// The original path includes the extension needed for the exception check.
+	originalPath, err := services.GetImageFromCache(id)
+	if err != nil || originalPath == "" {
+		image, err := services.GetImage(id)
 		if err != nil {
 			return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err)
-		} else if imageSize.ID == 0 {
+		} else if image.ID == 0 {
 			return errorutil.Response(c, fiber.StatusNotFound, errors.ImageExists, "Image does not exist.")
 		}
 
-		// Construct the file path.
-		path, err := services.GetPath(&imageSize.Image.Folder.AppStoragePath, imageSize.Image.FolderID)
+		path, err := services.GetPath(&image.Folder.AppStoragePath, image.FolderID)
 		if err != nil {
 			return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err)
 		}
-
-		filePath = fmt.Sprintf("%s%s-%s.webp", path, imageSize.Image.Name, size)
-		_ = services.SaveImageToCache(imageSize.Image.ID, filePath, size.String())
+		originalPath = fmt.Sprintf("%s%s.%s", path, image.Name, image.Extension)
+		_ = services.SaveImageToCache(id, originalPath)
 	}
+
+	// Excluded formats share the original cache entry for every requested size.
+	if upload.IsImageConversionExcluded(filepath.Ext(originalPath)) {
+		return c.SendFile(originalPath)
+	}
+
+	// Get the image size only after a cache miss for a convertible format.
+	imageSize, err := services.GetImageSizeById(id, size)
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err)
+	} else if imageSize.ID == 0 {
+		return errorutil.Response(c, fiber.StatusNotFound, errors.ImageExists, "Image does not exist.")
+	}
+
+	// Construct and cache the variant path.
+	path, err := services.GetPath(&imageSize.Image.Folder.AppStoragePath, imageSize.Image.FolderID)
+	if err != nil {
+		return errorutil.Response(c, fiber.StatusInternalServerError, errorutil.QueryError, err)
+	}
+	filePath = fmt.Sprintf("%s%s-%s.webp", path, imageSize.Image.Name, size)
+	_ = services.SaveImageToCache(imageSize.Image.ID, filePath, size.String())
 
 	// Send the file as a response.
 	return c.SendFile(filePath)
@@ -162,8 +187,9 @@ func CreateImage(c fiber.Ctx) error {
 	}
 
 	// Upload the image.
+	resizable := !request.IsNotResizable && !upload.IsImageConversionExcluded(extension)
 	progress := 100.0
-	if !request.IsNotResizable {
+	if resizable {
 		progress = 100.0 / 7
 	}
 
@@ -177,7 +203,7 @@ func CreateImage(c fiber.Ctx) error {
 
 	// Create web size images.
 	var imageSizes []models.ImageSize
-	if !request.IsNotResizable {
+	if resizable {
 		if imageSizes, err = convertAndUploadImages(storagePath, request.FolderID, filename, data, request.Quality, progress, &fileProgress); err != nil {
 			return errorutil.Response(c, fiber.StatusInternalServerError, errors.ConvertImage, err)
 		}
@@ -252,12 +278,13 @@ func UpdateImage(c fiber.Ctx) error {
 		extension = &parsedExtension
 
 		// Convert data to bytes.
-		mimeType, base64Data, err := upload.GetMimeTypeAndBase64(*request.Data)
+		parsedMimeType, base64Data, err := upload.GetMimeTypeAndBase64(*request.Data)
 		if err != nil {
 			return errorutil.Response(c, fiber.StatusBadRequest, errors.ParseBase64, err)
-		} else if isValid := upload.IsValidImage(mimeType); !isValid {
-			return errorutil.Response(c, fiber.StatusBadRequest, errors.ImageTypeInvalid, fmt.Sprintf("Invalid image for %s.", mimeType))
+		} else if isValid := upload.IsValidImage(parsedMimeType); !isValid {
+			return errorutil.Response(c, fiber.StatusBadRequest, errors.ImageTypeInvalid, fmt.Sprintf("Invalid image for %s.", parsedMimeType))
 		}
+		mimeType = &parsedMimeType
 		data, err := upload.Base64ToBytes(base64Data)
 		if err != nil {
 			return errorutil.Response(c, fiber.StatusBadRequest, errors.ParseBase64, fmt.Sprintf("Error while decoding bytes. Amount of correct parsed bytes: %d", err))
@@ -266,8 +293,9 @@ func UpdateImage(c fiber.Ctx) error {
 		size = &dataLen
 
 		// Upload the image.
+		resizable := (request.IsNotResizable == nil || !*request.IsNotResizable) && !upload.IsImageConversionExcluded(parsedExtension)
 		progress := 100.0
-		if request.IsNotResizable == nil || !*request.IsNotResizable {
+		if resizable {
 			progress = 100.0 / 7
 		}
 
@@ -281,14 +309,18 @@ func UpdateImage(c fiber.Ctx) error {
 		width = &imageWidth
 		height = &imageHeight
 
-		// Create web size images.
-		if request.IsNotResizable == nil || !*request.IsNotResizable {
-			if createdImageSizes, err := convertAndUploadImages(&image.Folder.AppStoragePath, image.FolderID, *filename, data, *request.Quality, progress, &fileProgress); err != nil {
+		// Replace old size records even when the new image has no variants.
+		createdImageSizes := []models.ImageSize{}
+		if resizable {
+			quality := 0
+			if request.Quality != nil {
+				quality = *request.Quality
+			}
+			if createdImageSizes, err = convertAndUploadImages(&image.Folder.AppStoragePath, image.FolderID, *filename, data, quality, progress, &fileProgress); err != nil {
 				return errorutil.Response(c, fiber.StatusInternalServerError, errors.ConvertImage, err)
-			} else {
-				imageSizes = &createdImageSizes
 			}
 		}
+		imageSizes = &createdImageSizes
 	}
 
 	// Update the image.

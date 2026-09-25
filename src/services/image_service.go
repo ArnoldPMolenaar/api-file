@@ -146,6 +146,7 @@ func SaveImageToCache(imageId uint, path string, size ...string) error {
 
 // UpdateImage method to update the image description.
 func UpdateImage(image *models.Image, name, extension, mimeType *string, size, width, height *int, description *string, sizes *[]models.ImageSize) (models.Image, error) {
+	previousSizes := image.ImageSizes
 	if name != nil {
 		image.Name = *name
 	}
@@ -179,6 +180,15 @@ func UpdateImage(image *models.Image, name, extension, mimeType *string, size, w
 
 	if result := database.Pg.Save(&image); result.Error != nil {
 		return models.Image{}, result.Error
+	}
+
+	// File replacements can change paths and remove previously cached variants.
+	_ = DeleteImageFromCache(image.ID)
+	for i := range previousSizes {
+		_ = DeleteImageFromCache(image.ID, previousSizes[i].Size.String())
+	}
+	for i := range image.ImageSizes {
+		_ = DeleteImageFromCache(image.ID, image.ImageSizes[i].Size.String())
 	}
 
 	return *image, nil
